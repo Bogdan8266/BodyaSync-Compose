@@ -53,13 +53,13 @@
     <string name="location_cd">Umístění médií</string>
     <string name="location_map_cd">Mapa polohy</string>
     <string name="app_dev">od %s</string>
-    <string name="app_dev_name">IacobIonut01</string>
+    <string name="app_dev_name">Bodya</string>
     <string name="donate">Přispět</string>
     <string name="github">GitHub</string>
     <string name="donate_button_cd">Tlačítko přispění</string>
     <string name="github_button_cd">Tlačítko GitHub</string>
-    <string name="donate_url">https://www.paypal.com/paypalme/iacobionut01</string>
-    <string name="github_url">https://github.com/IacobIonut01/Gallery</string>
+    <string name="donate_url">https://www.paypal.com/paypalme/Bodya</string>
+    <string name="github_url">https://github.com/Bodya/Gallery</string>
     <string name="use_as">Použít jako</string>
     <string name="set_as">"Nastavit jako: "</string>
     <string name="action_cancel">Zrušit</string>

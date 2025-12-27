@@ -21,7 +21,7 @@ import kotlinx.coroutines.launch
 fun <T : Media> FavoriteButton(
     media: T,
     enabled: Boolean,
-    followTheme: Boolean = false
+    followTheme: Boolean = true
 ) {
     val handler = LocalMediaHandler.current
     val scope = rememberCoroutineScope()

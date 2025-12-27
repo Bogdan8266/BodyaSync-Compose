@@ -6,6 +6,7 @@ avifCoderCoil = "2.1.2"
 benchmarkMacroJunit4 = "1.4.1"
 biometric = "1.2.0-alpha05"
 appcompat = "1.7.1"
+converterGson = "3.0.0"
 core = "1.45.0"
 coreSplashscreen = "1.2.0"
 exifinterface = "1.4.1"
@@ -34,6 +35,7 @@ navigation-runtime-ktx = "2.9.6"
 onnxruntimeAndroidQnn = "1.23.2"
 pinchzoomgrid = "0.0.5"
 profileinstaller = "1.4.1"
+retrofit = "3.0.0"
 room = "2.8.3"
 accompanist = "0.37.3"
 datastore = "1.1.4"
@@ -48,6 +50,8 @@ zoomimage = "1.4.0"
 lifecycleProcess = "2.9.4"
 glide-compose = "1.0.0-beta01"
 glide-ksp = "5.0.4"
+material3Version = "1.4.0"
+foundation = "1.10.0"
 
 [libraries]
 # AndroidX
@@ -99,6 +103,7 @@ compose-shimmer = { group = "com.valentinilk.shimmer", name = "compose-shimmer",
 compose-ui-test-manifest = { group = "androidx.compose.ui", name = "ui-test-manifest" }
 
 # Dagger
+converter-gson = { module = "com.squareup.retrofit2:converter-gson", version.ref = "converterGson" }
 core = { module = "com.composables:core", version.ref = "core" }
 dagger-hilt = { group = "com.google.dagger", name = "hilt-android", version.ref = "hilt" }
 dagger-hilt-compiler = { group = "com.google.dagger", name = "hilt-android-compiler", version.ref = "hilt" }
@@ -115,6 +120,7 @@ lazycolumnscrollbar = { module = "com.github.nanihadesuka:LazyColumnScrollbar", 
 metadata-extractor = { module = "com.drewnoakes:metadata-extractor", version.ref = "metadataExtractor" }
 onnxruntime-android-qnn = { module = "com.microsoft.onnxruntime:onnxruntime-android-qnn", version.ref = "onnxruntimeAndroidQnn" }
 pinchzoomgrid = { module = "io.github.dokar3:pinchzoomgrid", version.ref = "pinchzoomgrid" }
+retrofit = { module = "com.squareup.retrofit2:retrofit", version.ref = "retrofit" }
 room-runtime = { group = "androidx.room", name = "room-runtime", version.ref = "room" }
 room-compiler = { group = "androidx.room", name = "room-compiler", version.ref = "room" }
 room-ktx = { group = "androidx.room", name = "room-ktx", version.ref = "room" }
@@ -161,6 +167,8 @@ espresso-core = { group = "androidx.test.espresso", name = "espresso-core", vers
 
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinxSerializationJson" }
 androidx-lifecycle-process = { group = "androidx.lifecycle", name = "lifecycle-process", version.ref = "lifecycleProcess" }
+androidx-material3 = { group = "androidx.compose.material3", name = "material3", version.ref = "material3Version" }
+androidx-foundation = { group = "androidx.compose.foundation", name = "foundation", version.ref = "foundation" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }

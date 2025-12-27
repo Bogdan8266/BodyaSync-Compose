@@ -53,13 +53,13 @@
     <string name="location_cd">媒体位置</string>
     <string name="location_map_cd">位置地图</string>
     <string name="app_dev">由 %s 开发</string>
-    <string name="app_dev_name">IacobIonut01</string>
+    <string name="app_dev_name">Bodya</string>
     <string name="donate">捐赠</string>
     <string name="github">GitHub</string>
     <string name="donate_button_cd">捐赠按钮</string>
     <string name="github_button_cd">Github按钮</string>
-    <string name="donate_url">https://www.paypal.com/paypalme/iacobionut01</string>
-    <string name="github_url">https://github.com/IacobIonut01/Gallery</string>
+    <string name="donate_url">https://www.paypal.com/paypalme/Bodya</string>
+    <string name="github_url">https://github.com/Bodya/Gallery</string>
     <string name="use_as">设置为</string>
     <string name="set_as">"设为： "</string>
     <string name="action_cancel">取消</string>

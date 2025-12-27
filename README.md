@@ -3,11 +3,11 @@
 > 
 > The goal of this project is to create and bring the Gallery app everyone wants, with the features everyone needs. FOSS
 
-![Downloads](https://img.shields.io/github/downloads/IacobIonut01/Gallery/total?color=%23247EE0&label=Downloads)
-[![CI](https://github.com/IacobIonut01/Gallery/actions/workflows/nightly.yml/badge.svg?branch=main)](https://github.com/IacobIonut01/Gallery/actions/workflows/nightly.yml)
-![License](https://img.shields.io/github/license/IacobIonut01/Gallery?color=%23247EE0)
+![Downloads](https://img.shields.io/github/downloads/Bodya/Gallery/total?color=%23247EE0&label=Downloads)
+[![CI](https://github.com/Bodya/Gallery/actions/workflows/nightly.yml/badge.svg?branch=main)](https://github.com/Bodya/Gallery/actions/workflows/nightly.yml)
+![License](https://img.shields.io/github/license/Bodya/Gallery?color=%23247EE0)
 [![Crowdin](https://badges.crowdin.net/gallery-compose/localized.svg)](https://crowdin.com/project/gallery-compose)
-![GitHub Repo stars](https://img.shields.io/github/stars/IacobIonut01/Gallery?color=%23247EE0)
+![GitHub Repo stars](https://img.shields.io/github/stars/Bodya/Gallery?color=%23247EE0)
 
 ![](./screenshots/preview.png)
 [![Crowdin](./screenshots/items/support_banner.png)](https://crowdin.com/project/gallery-compose)
@@ -24,7 +24,7 @@
 [<img 
     alt='Get it on GitHub'
     src='./screenshots/items/get-it-on-github.png'
-    height="80" />](https://github.com/IacobIonut01/Gallery/releases/latest)
+    height="80" />](https://github.com/Bodya/Gallery/releases/latest)
 
 ## Support
 - Translate the project using the link from above
@@ -46,4 +46,4 @@
 - Will you add [X] feature?
     - Please open a new feature request under 'Issues' tab and if the feature will be considered useful and possible can be added.
 - Can you remove permission [X]?
-    - Several permissions (e.g. Internet connectivity, location) are for showing a map preview of your current photo location data. If you do not need this feature, you can download a `nomaps` release from the [Releases page](https://github.com/IacobIonut01/Gallery/releases).
+    - Several permissions (e.g. Internet connectivity, location) are for showing a map preview of your current photo location data. If you do not need this feature, you can download a `nomaps` release from the [Releases page](https://github.com/Bodya/Gallery/releases).

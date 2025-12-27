@@ -51,7 +51,7 @@ sealed class Screen(val route: String) {
     data object SettingsGeneralScreen : Screen("settings_general_screen")
     data object SettingsCustomizationScreen : Screen("settings_customization_screen")
     data object SettingsSmartFeaturesScreen : Screen("settings_smart_features_screen")
-
+    object SettingsSyncScreen : Screen("settings_sync") // <-- ДОДАЙ ЦЕ
     data object IgnoredScreen : Screen("ignored_screen")
     data object IgnoredSetupScreen : Screen("ignored_setup_screen")
 

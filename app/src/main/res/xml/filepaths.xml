@@ -2,4 +2,10 @@
 <paths>
     <cache-path name="shared_files" path="." />
     <files-path name="decrypted_media" path="." />
+    <cache-path name="shared_images" path="shared_images/" />
+    <cache-path name="edited_images" path="edited_images/" />
+
+    <!-- Це стандартні шляхи, які вже могли бути в проекті -->
+    <external-path name="external_files" path="." />
+    <files-path name="internal_files" path="." />
 </paths>

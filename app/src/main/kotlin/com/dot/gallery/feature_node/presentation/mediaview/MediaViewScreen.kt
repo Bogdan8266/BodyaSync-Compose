@@ -37,6 +37,7 @@ import androidx.compose.foundation.pager.PagerDefaults
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisallowComposableCalls
 import androidx.compose.runtime.DisposableEffect
@@ -81,11 +82,9 @@ import com.dot.gallery.core.Constants.DEFAULT_TOP_BAR_ANIMATION_DURATION
 import com.dot.gallery.core.Constants.Target.TARGET_TRASH
 import com.dot.gallery.core.LocalEventHandler
 import com.dot.gallery.core.Settings.Misc.rememberAllowBlur
-import com.dot.gallery.core.Settings.Misc.rememberAutoHideOnVideoPlay
 import com.dot.gallery.core.Settings.Misc.rememberDateHeaderFormat
 import com.dot.gallery.core.Settings.Misc.rememberExtendedDateHeaderFormat
 import com.dot.gallery.core.Settings.Misc.rememberShowMediaViewDateHeader
-import com.dot.gallery.core.Settings.Misc.rememberVideoAutoplay
 import com.dot.gallery.core.navigateUp
 import com.dot.gallery.core.presentation.components.util.swipe
 import com.dot.gallery.feature_node.domain.model.AlbumState
@@ -175,7 +174,6 @@ fun <T : Media> MediaViewScreen(
 
     var initialPageSetup by rememberSaveable { mutableStateOf(false) }
 
-    // Use only primitive ids/sizes as saveable keys (avoid passing full media list object)
     val initialPage = rememberSaveable(mediaId, mediaState.value.media.size) {
         mediaState.value.media.indexOfFirst { it.id == mediaId }.coerceAtLeast(0)
     }
@@ -218,13 +216,14 @@ fun <T : Media> MediaViewScreen(
         currentExtendedDateFormat
     ) {
         buildAnnotatedString {
-            val date = currentMedia?.definedTimestamp?.getMediaAppBarDate(
+            val media = currentMedia
+            val date = media?.definedTimestamp?.getMediaAppBarDate(
                 currentDateFormat,
                 currentExtendedDateFormat
             ) ?: ""
             if (date.isNotEmpty()) {
-                val top = date.substringBefore("\n")
-                val bottom = date.substringAfter("\n")
+                val top = date.substringBefore(Char(10))
+                val bottom = date.substringAfter(Char(10))
                 withStyle(
                     style = textStyle.copy(
                         fontWeight = FontWeight.Bold,
@@ -244,16 +243,12 @@ fun <T : Media> MediaViewScreen(
             }
         }
     }
-    val canAutoPlay by rememberVideoAutoplay()
-    val playWhenReady by rememberedDerivedState(
-        currentMedia,
-        canAutoPlay
-    ) { currentMedia?.isVideo == true && canAutoPlay }
+
     val isReadOnly by rememberedDerivedState { currentMedia?.readUriOnly == true }
     val showInfo by rememberedDerivedState { currentMedia?.trashed == 0 && !isReadOnly }
 
     var showUI by rememberSaveable { mutableStateOf(true) }
-    // Key rotation helpers by media id, not whole media object (prevents Serializable fallback of Media inside internal Pair)
+
     val newRotationValue = rememberSaveable(currentMedia?.id ?: -1L) { mutableIntStateOf(0) }
     val showRotationHelper = rememberSaveable(currentMedia?.id ?: -1L) { mutableStateOf(false) }
 
@@ -274,7 +269,6 @@ fun <T : Media> MediaViewScreen(
         configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
     }
     val isGestureEnabled = rememberGestureNavigationEnabled()
-    // Extra padding for navigation bar with 3/2-buttons
     val extraPaddingWithNavButtons by remember(isLandscape, isGestureEnabled) {
         mutableStateOf(
             if (!isGestureEnabled && !isLandscape) {
@@ -304,7 +298,6 @@ fun <T : Media> MediaViewScreen(
 
     val userScrollEnabled by rememberedDerivedState { sheetState.currentDetent != FullyExpanded }
     var isLocked by rememberSaveable { mutableStateOf(false) }
-    // Override back button/gesture when locked
     BackHandler(enabled = isLocked) { }
 
     val sheetProgress by rememberedDerivedState {
@@ -326,15 +319,15 @@ fun <T : Media> MediaViewScreen(
         }
     }
 
-    // set HDR Gain map
+    // set HDR Gain map (Фікс: пропускаємо для серверних фото)
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
         LaunchedEffect(mediaState.value) {
             withContext(Dispatchers.IO) {
                 snapshotFlow { pagerState.currentPage }.collectLatest {
-                    printWarning("Trying to set HDR mode for page $it")
-                    if (currentMedia?.isImage == true) {
-                        val request = ImageRequest(context, currentMedia?.getUri().toString()) {
-                            currentMedia?.let { media ->
+                    val currentMediaHdr = currentMedia
+                    if (currentMediaHdr?.isImage == true && !currentMediaHdr?.path?.startsWith("http")!!) {
+                        val request = ImageRequest(context, currentMediaHdr.getUri().toString()) {
+                            currentMediaHdr.let { media ->
                                 setExtra(
                                     key = "mediaKey",
                                     value = media.idLessKey,
@@ -342,7 +335,7 @@ fun <T : Media> MediaViewScreen(
                             }
                             setExtra(
                                 key = "realMimeType",
-                                value = currentMedia?.mimeType,
+                                value = currentMediaHdr.mimeType,
                             )
                         }
                         val result = context.sketch.execute(request)
@@ -351,13 +344,11 @@ fun <T : Media> MediaViewScreen(
                             withContext(Dispatchers.Main.immediate) {
                                 context.setHdrMode(hasGainmap)
                             }
-                            printWarning("Setting HDR Mode to $hasGainmap")
-                        } ?: printWarning("Resulting image null")
+                        }
                     } else {
                         withContext(Dispatchers.Main.immediate) {
                             context.setHdrMode(false)
                         }
-                        printWarning("Not an image, skipping")
                     }
                 }
             }
@@ -365,7 +356,6 @@ fun <T : Media> MediaViewScreen(
 
         DisposableEffect(Unit) {
             onDispose {
-                printWarning("Disposing HDR Mode")
                 context.setHdrMode(false)
             }
         }
@@ -373,8 +363,6 @@ fun <T : Media> MediaViewScreen(
 
     val bottomPadding =
         remember(configuration.orientation) {
-            //if (!isGestureEnabled && isLandscape) 0.dp
-            //else
             paddingValues.calculateBottomPadding()
         }
 
@@ -417,167 +405,168 @@ fun <T : Media> MediaViewScreen(
                 beyondViewportPageCount = 0
             ) { index ->
                 val media by rememberedDerivedState(mediaState.value) {
-                    mediaState.value.media.getOrNull(
-                        index
-                    )
+                    mediaState.value.media.getOrNull(index)
                 }
+
                 val canPlay = rememberSaveable(media) { mutableStateOf(false) }
                 var canAnimateContent by rememberSaveable(media) { mutableStateOf(true) }
+
                 AnimatedVisibility(
-                    modifier = Modifier
-                        .onVisibilityChanged { isVisible ->
-                            canPlay.value =
-                                (if (media?.isVideo == true) isVisible && playWhenReady else false)
-                            canAnimateContent = isVisible
-                        },
                     visible = media != null && initialPageSetup,
                     enter = enterAnimation,
-                    exit = exitAnimation
+                    exit = exitAnimation,
+                    modifier = Modifier
+                        .onVisibilityChanged { isVisible ->
+                            val currentMediaInVisibility = media
+                            // ФІКС АВТОЗАПУСКУ:
+                            // Якщо елемент видимий І це відео -> Примусово True, без лишніх перевірок
+                            val isVideo = currentMediaInVisibility?.mimeType?.startsWith("video") == true || currentMediaInVisibility?.duration != null
+                            canPlay.value = isVisible && isVideo
+
+                            canAnimateContent = isVisible
+                        }
                 ) {
-                    var offset by remember {
-                        mutableStateOf(IntOffset(0, 0))
-                    }
-                    with(sharedTransitionScope) {
-                        MediaPreviewComponent(
-                            modifier = Modifier
-                                .mediaSharedElement(
-                                    allowAnimation = canAnimateContent,
-                                    media = media!!,
-                                    animatedVisibilityScope = animatedContentScope
-                                )
-                                .graphicsLayer {
-                                    translationY =
-                                        -((halfScreenHeight -
-                                                bottomBarHeightDefault -
-                                                bottomPadding -
-                                                extraPaddingWithNavButtons -
-                                                if (!isGestureEnabled && isLandscape) navigationBarHeight else 0.dp
-                                                ).toPx() * sheetProgress)
-                                },
-                            media = media,
-                            uiEnabled = showUI,
-                            playWhenReady = canPlay,
-                            onSwipeDown = {
-                                if (!isLocked) {
-                                    windowInsetsController.toggleSystemBars(show = true)
-                                    runCatching {
-                                        (activity as ComponentActivity).onBackPressedDispatcher.onBackPressed()
-                                    }.getOrElse {
-                                        eventHandler.navigateUp()
-                                    }
-                                }
-                            },
-                            offset = offset,
-                            rotationDisabled = isLocked,
-                            onImageRotated = { newRotation ->
-                                showRotationHelper.value =
-                                    media?.isImage == true && newRotation != 0 && newRotation != 360
-                                newRotationValue.intValue =
-                                    (if (showRotationHelper.value) newRotation else 0)
-                            },
-                            onItemClick = {
-                                if (sheetState.currentDetent == imageOnlyDetent) {
-                                    showUI = !showUI
-                                    windowInsetsController.toggleSystemBars(showUI)
-                                }
-                            }
-                        ) { player, isPlaying, currentTime, totalTime, buffer, frameRate ->
-                            Box(
-                                modifier = Modifier.fillMaxSize()
-                            ) {
-                                val hideUiOnPlay by rememberAutoHideOnVideoPlay()
-                                LaunchedEffect(isPlaying.value, hideUiOnPlay) {
-                                    if (isPlaying.value && showUI && hideUiOnPlay) {
-                                        delay(2.seconds)
-                                        showUI = false
-                                        windowInsetsController.toggleSystemBars(false)
-                                    }
-                                }
-                                val resources = LocalResources.current
-                                val width =
-                                    remember(context) { resources.displayMetrics.widthPixels }
-                                Spacer(
-                                    modifier = Modifier
-                                        .fillMaxSize()
-                                        .graphicsLayer {
-                                            translationX = width / 1.5f
-                                        }
-                                        .align(Alignment.TopEnd)
-                                        .clip(CircleShape)
-                                        .combinedClickable(
-                                            interactionSource = remember { MutableInteractionSource() },
-                                            indication = null,
-                                            onDoubleClick = {
-                                                scope.launch {
-                                                    currentTime.longValue += 10 * 1000
-                                                    player.seekTo(currentTime.longValue)
-                                                    delay(100)
-                                                    player.play()
-                                                }
-                                            },
-                                            onClick = {
-                                                if (sheetState.currentDetent == imageOnlyDetent) {
-                                                    showUI = !showUI
-                                                    windowInsetsController.toggleSystemBars(showUI)
-                                                }
-                                            }
-                                        )
-                                        .swipe(onOffset = { offset = it }) {
-                                            windowInsetsController.toggleSystemBars(show = true)
-                                            eventHandler.navigateUp()
-                                        }
-                                )
-
-                                Spacer(
-                                    modifier = Modifier
-                                        .fillMaxSize()
-                                        .graphicsLayer {
-                                            translationX = -width / 1.5f
-                                        }
-                                        .align(Alignment.TopStart)
-                                        .clip(CircleShape)
-                                        .combinedClickable(
-                                            interactionSource = remember { MutableInteractionSource() },
-                                            indication = null,
-                                            onDoubleClick = {
-                                                scope.launch {
-                                                    currentTime.longValue -= 10 * 1000
-                                                    player.seekTo(currentTime.longValue)
-                                                    delay(100)
-                                                    player.play()
-                                                }
-                                            },
-                                            onClick = {
-                                                if (sheetState.currentDetent == imageOnlyDetent) {
-                                                    showUI = !showUI
-                                                    windowInsetsController.toggleSystemBars(
-                                                        showUI
-                                                    )
-                                                }
-                                            }
-                                        )
-                                        .swipe(onOffset = { offset = it }) {
-                                            windowInsetsController.toggleSystemBars(show = true)
-                                            eventHandler.navigateUp()
-                                        }
-                                )
-
-                                AnimatedVisibility(
-                                    visible = showUI,
-                                    enter = enterAnimation(DEFAULT_TOP_BAR_ANIMATION_DURATION),
-                                    exit = exitAnimation(DEFAULT_TOP_BAR_ANIMATION_DURATION),
-                                    modifier = Modifier.fillMaxSize()
-                                ) {
-                                    VideoPlayerController(
-                                        paddingValues = paddingValues,
-                                        player = player,
-                                        isPlaying = isPlaying,
-                                        currentTime = currentTime,
-                                        totalTime = totalTime,
-                                        buffer = buffer,
-                                        toggleRotate = toggleRotate,
-                                        frameRate = frameRate
+                    val mediaItem = media
+                    mediaItem?.let {
+                        var offset by remember {
+                            mutableStateOf(IntOffset(0, 0))
+                        }
+                        with(sharedTransitionScope) {
+                            MediaPreviewComponent(
+                                modifier = Modifier
+                                    .mediaSharedElement(
+                                        allowAnimation = canAnimateContent,
+                                        media = mediaItem,
+                                        animatedVisibilityScope = animatedContentScope
                                     )
+                                    .graphicsLayer {
+                                        translationY =
+                                            -((halfScreenHeight -
+                                                    bottomBarHeightDefault -
+                                                    bottomPadding -
+                                                    extraPaddingWithNavButtons -
+                                                    if (!isGestureEnabled && isLandscape) navigationBarHeight else 0.dp
+                                                    ).toPx() * sheetProgress)
+                                    },
+                                media = mediaItem,
+                                uiEnabled = showUI,
+                                playWhenReady = canPlay,
+                                onSwipeDown = {
+                                    if (!isLocked) {
+                                        windowInsetsController.toggleSystemBars(show = true)
+                                        runCatching {
+                                            (activity as ComponentActivity).onBackPressedDispatcher.onBackPressed()
+                                        }.getOrElse {
+                                            eventHandler.navigateUp()
+                                        }
+                                    }
+                                },
+                                offset = offset,
+                                rotationDisabled = isLocked,
+                                onImageRotated = { newRotation ->
+                                    showRotationHelper.value =
+                                        mediaItem.isImage && newRotation != 0 && newRotation != 360
+                                    newRotationValue.intValue =
+                                        (if (showRotationHelper.value) newRotation else 0)
+                                },
+                                onItemClick = {
+                                    if (sheetState.currentDetent == imageOnlyDetent) {
+                                        showUI = !showUI
+                                        windowInsetsController.toggleSystemBars(showUI)
+                                    }
+                                }
+                            ) { player, isPlaying, currentTime, totalTime, buffer, frameRate ->
+                                Box(modifier = Modifier.fillMaxSize()) {
+
+                                    // ФІКС: Миттєво ховаємо UI, якщо відео грає
+                                    LaunchedEffect(isPlaying.value) {
+                                        if (isPlaying.value && showUI) {
+                                            showUI = false
+                                            windowInsetsController.toggleSystemBars(false)
+                                        }
+                                    }
+
+                                    val resources = LocalResources.current
+                                    val width = remember(context) { resources.displayMetrics.widthPixels }
+
+                                    // Клік зони (подвійний тап для перемотки)
+                                    Spacer(
+                                        modifier = Modifier
+                                            .fillMaxSize()
+                                            .graphicsLayer { translationX = width / 1.5f }
+                                            .align(Alignment.TopEnd)
+                                            .clip(CircleShape)
+                                            .combinedClickable(
+                                                interactionSource = remember { MutableInteractionSource() },
+                                                indication = null,
+                                                onDoubleClick = {
+                                                    scope.launch {
+                                                        currentTime.longValue += 10 * 1000
+                                                        player.seekTo(currentTime.longValue)
+                                                        delay(100)
+                                                        player.play()
+                                                    }
+                                                },
+                                                onClick = {
+                                                    if (sheetState.currentDetent == imageOnlyDetent) {
+                                                        showUI = !showUI
+                                                        windowInsetsController.toggleSystemBars(showUI)
+                                                    }
+                                                }
+                                            )
+                                            .swipe(onOffset = { offset = it }) {
+                                                windowInsetsController.toggleSystemBars(show = true)
+                                                eventHandler.navigateUp()
+                                            }
+                                    )
+
+                                    Spacer(
+                                        modifier = Modifier
+                                            .fillMaxSize()
+                                            .graphicsLayer { translationX = -width / 1.5f }
+                                            .align(Alignment.TopStart)
+                                            .clip(CircleShape)
+                                            .combinedClickable(
+                                                interactionSource = remember { MutableInteractionSource() },
+                                                indication = null,
+                                                onDoubleClick = {
+                                                    scope.launch {
+                                                        currentTime.longValue -= 10 * 1000
+                                                        player.seekTo(currentTime.longValue)
+                                                        delay(100)
+                                                        player.play()
+                                                    }
+                                                },
+                                                onClick = {
+                                                    if (sheetState.currentDetent == imageOnlyDetent) {
+                                                        showUI = !showUI
+                                                        windowInsetsController.toggleSystemBars(showUI)
+                                                    }
+                                                }
+                                            )
+                                            .swipe(onOffset = { offset = it }) {
+                                                windowInsetsController.toggleSystemBars(show = true)
+                                                eventHandler.navigateUp()
+                                            }
+                                    )
+
+                                    AnimatedVisibility(
+                                        visible = showUI,
+                                        enter = enterAnimation(DEFAULT_TOP_BAR_ANIMATION_DURATION),
+                                        exit = exitAnimation(DEFAULT_TOP_BAR_ANIMATION_DURATION),
+                                        modifier = Modifier.fillMaxSize()
+                                    ) {
+                                        VideoPlayerController(
+                                            paddingValues = paddingValues,
+                                            player = player,
+                                            isPlaying = isPlaying,
+                                            currentTime = currentTime,
+                                            totalTime = totalTime,
+                                            buffer = buffer,
+                                            toggleRotate = toggleRotate,
+                                            frameRate = frameRate
+                                        )
+                                    }
                                 }
                             }
                         }
@@ -619,19 +608,16 @@ fun <T : Media> MediaViewScreen(
                         }
                     }
                 },
-                onLock = {
-                    isLocked = !isLocked
-                }
+                onLock = { isLocked = !isLocked }
             )
+
             LaunchedEffect(showUI) {
                 if (!showUI && (sheetState.currentDetent == FullyExpanded || sheetState.targetDetent == FullyExpanded)) {
                     sheetState.animateTo(imageOnlyDetent)
                 }
             }
             BackHandler(sheetState.currentDetent == FullyExpanded) {
-                scope.launch {
-                    sheetState.animateTo(imageOnlyDetent)
-                }
+                scope.launch { sheetState.animateTo(imageOnlyDetent) }
             }
             val bottomSheetAlpha by animateFloatAsState(
                 targetValue = if (showUI) 1f else 0f,
@@ -643,9 +629,7 @@ fun <T : Media> MediaViewScreen(
                 enabled = showUI && target != TARGET_TRASH && showInfo,
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
-                    .graphicsLayer {
-                        alpha = bottomSheetAlpha
-                    }
+                    .graphicsLayer { alpha = bottomSheetAlpha }
                     .fillMaxWidth()
             ) {
                 Column(
@@ -710,5 +694,4 @@ fun <T : Media> MediaViewScreen(
             }
         }
     }
-
 }

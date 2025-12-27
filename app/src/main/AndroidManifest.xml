@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:tools="http://schemas.android.com/tools"
+
     xmlns:android="http://schemas.android.com/apk/res/android"
     tools:ignore="SelectedPhotoAccess, ProtectedPermissions">
 
@@ -16,6 +17,7 @@
 
     <!-- Required to download Map Preview for Media -->
     <uses-permission android:name="android.permission.INTERNET"/>
+
 
     <!-- Remove unwanted permissions from being added -->
     <uses-permission android:name="android.permission.INTERNET" tools:node="remove"/>
@@ -39,6 +41,8 @@
     <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE"/>
     <!-- Foreground service type required for encryption/decryption background tasks on SDK 34+ -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PROCESSING" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
 
     <queries>
@@ -65,7 +69,8 @@
         android:hardwareAccelerated="true"
         android:supportsRtl="true"
         android:theme="@style/Theme.Gallery"
-        tools:targetApi="33">
+        tools:targetApi="33"
+        android:usesCleartextTraffic="true">
         <activity
             android:name=".feature_node.presentation.main.MainActivity"
             android:exported="true"
@@ -177,7 +182,8 @@
 
         <provider
             android:name="androidx.core.content.FileProvider"
-            android:authorities="${appProvider}"
+            
+            android:authorities="${applicationId}.provider"
             android:enabled="true"
             android:grantUriPermissions="true"
             android:exported="false">
@@ -198,10 +204,9 @@
         </provider>
 
         <service
-            android:name="androidx.work.impl.foreground.SystemForegroundService"
-            android:exported="false"
-            tools:node="merge"
-            android:foregroundServiceType="dataSync|mediaProcessing" />
+            android:name=".feature_node.data.service.SyncService"
+            android:foregroundServiceType="dataSync"
+            android:exported="false" />
 
     </application>
 

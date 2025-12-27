@@ -53,13 +53,13 @@
     <string name="location_cd">Media locatie</string>
     <string name="location_map_cd">Kaartlocatie</string>
     <string name="app_dev">door %s</string>
-    <string name="app_dev_name">IacobIonut01</string>
+    <string name="app_dev_name">Bodya</string>
     <string name="donate">Doneer</string>
     <string name="github">Github</string>
     <string name="donate_button_cd">Doneer knop</string>
     <string name="github_button_cd">Github-knop</string>
-    <string name="donate_url">https://www.paypal.com/paypalme/iacobionut01</string>
-    <string name="github_url">https://github.com/IacobIonut01/Gallery</string>
+    <string name="donate_url">https://www.paypal.com/paypalme/Bodya</string>
+    <string name="github_url">https://github.com/Bodya/Gallery</string>
     <string name="use_as">Gebruiken als</string>
     <string name="set_as">"Ingesteld als: "</string>
     <string name="action_cancel">Annuleer</string>

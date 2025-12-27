@@ -3,7 +3,6 @@ package com.dot.gallery.feature_node.presentation.mediaview.components.video
 import android.content.Context
 import android.media.MediaMetadataRetriever
 import android.net.Uri
-import androidx.annotation.OptIn
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -35,21 +34,9 @@ import kotlinx.coroutines.withContext
 import java.io.File
 import kotlin.time.Duration.Companion.seconds
 
-/**
- * A ViewModel that owns an ExoPlayer instance keyed by a media.id.
- * This survives configuration changes, reducing churn and preserving playback state.
- *
- * You still pass the current Media object from the Composable; if it changes (same id, new instance),
- * the ViewModel reuses the existing player unless the underlying uri actually changed.
- *
- * Persisted (process death) fields via SavedStateHandle:
- * - positionMs
- * - wasPlaying
- */
 @HiltViewModel(assistedFactory = VideoPlayerViewModel.Factory::class)
 class VideoPlayerViewModel @AssistedInject constructor(
-    @param:ApplicationContext
-    private val appContext: Context,
+    @ApplicationContext private val appContext: Context,
     private val savedStateHandle: SavedStateHandle = SavedStateHandle(),
     @Assisted("media") private val media: Media,
 ) : ViewModel() {
@@ -71,16 +58,10 @@ class VideoPlayerViewModel @AssistedInject constructor(
     )
 
     private val keychainHolder = KeychainHolder(appContext)
-
     private var decryptedFile: File? = null
     private var initialSeekApplied = false
-
-    // Public immutable flow
-    private val _state =
-        MutableStateFlow(PlaybackState(isDecrypting = media.isEncrypted))
+    private val _state = MutableStateFlow(PlaybackState(isDecrypting = media.isEncrypted))
     val state: StateFlow<PlaybackState> = _state
-
-    // Owned player
     var player: ExoPlayer = createExoPlayer()
 
     init {
@@ -94,26 +75,17 @@ class VideoPlayerViewModel @AssistedInject constructor(
             repeatMode = Player.REPEAT_MODE_ONE
             addListener(object : Player.Listener {
                 override fun onPlaybackStateChanged(playbackState: Int) {
-                    if (playbackState == Player.STATE_READY) {
-                        markReady()
-                    }
+                    if (playbackState == Player.STATE_READY) markReady()
                     updateDuration(duration)
                 }
-
                 override fun onEvents(player: Player, events: Player.Events) {
-                    // Duration might update after dynamic metadata
                     updateDuration(player.duration)
                 }
-
                 override fun onIsPlayingChanged(isPlaying: Boolean) {
                     _state.update { it.copy(isPlaying = isPlaying) }
                 }
-
                 override fun onPlayWhenReadyChanged(playWhenReady: Boolean, reason: Int) {
-                    // Keep isPlaying consistent (ExoPlayer may report false until ready)
-                    if (!playWhenReady) {
-                        _state.update { it.copy(isPlaying = false) }
-                    }
+                    if (!playWhenReady) _state.update { it.copy(isPlaying = false) }
                 }
             })
         }
@@ -123,16 +95,20 @@ class VideoPlayerViewModel @AssistedInject constructor(
         val positionRestore = savedStateHandle.get<Long>(KEY_POSITION) ?: 0L
         val wasPlayingRestore = savedStateHandle.get<Boolean>(KEY_PLAYING) ?: false
         if (positionRestore > 0) {
-            // Seek will be applied after player becomes ready
             _state.update { it.copy(positionMs = positionRestore, isPlaying = wasPlayingRestore) }
         }
     }
 
     private fun prepareMedia() {
-        if (media.isEncrypted) {
+        // ФІКС: Якщо посилання на сервер (http), то це не шифрований файл, ігноруємо isEncrypted
+        val isServerFile = media.path.startsWith("http")
+
+        if (media.isEncrypted && !isServerFile) {
             decryptAndPrepare()
         } else {
-            setAndPrepare(media.getUri(), media.mimeType)
+            // ФІКС: Беремо media.path (оригінал), якщо це сервер, інакше uri
+            val uriToPlay = if (isServerFile) Uri.parse(media.path) else media.getUri()
+            setAndPrepare(uriToPlay, media.mimeType)
             retrieveFrameRate(encrypted = false)
         }
     }
@@ -141,9 +117,8 @@ class VideoPlayerViewModel @AssistedInject constructor(
         viewModelScope.launch {
             _state.update { it.copy(isDecrypting = true, decryptFailed = false) }
             decryptedFile = withContext(Dispatchers.IO) {
-                try {
-                    createDecryptedVideoFile(keychainHolder, media)
-                } catch (t: Throwable) {
+                try { createDecryptedVideoFile(keychainHolder, media) }
+                catch (t: Throwable) {
                     printWarning("Decrypt failed: ${t.message}")
                     null
                 }
@@ -160,15 +135,9 @@ class VideoPlayerViewModel @AssistedInject constructor(
 
     private fun setAndPrepare(uri: Uri, mime: String?) {
         val existingUri = player.currentMediaItem?.localConfiguration?.uri
-        if (existingUri == uri) {
-            // Already set
-            return
-        }
+        if (existingUri == uri) return
         initialSeekApplied = false
-        val item = MediaItem.Builder()
-            .setUri(uri)
-            .setMimeType(mime)
-            .build()
+        val item = MediaItem.Builder().setUri(uri).setMimeType(mime).build()
         player.setMediaItem(item)
         player.prepare()
     }
@@ -176,12 +145,9 @@ class VideoPlayerViewModel @AssistedInject constructor(
     private fun markReady() {
         if (!_state.value.ready) {
             _state.update { it.copy(ready = true) }
-            // Apply initial seek only once
             if (!initialSeekApplied && _state.value.positionMs > 0) {
                 player.seekTo(_state.value.positionMs)
-                if (_state.value.isPlaying) {
-                    player.play()
-                }
+                if (_state.value.isPlaying) player.play()
                 initialSeekApplied = true
             }
         }
@@ -196,16 +162,8 @@ class VideoPlayerViewModel @AssistedInject constructor(
     private fun startProgressLoop() {
         viewModelScope.launch {
             while (isActive) {
-                val p = player
-                val pos = p.currentPosition
-                val buffered = p.bufferedPercentage
-                _state.update {
-                    it.copy(
-                        positionMs = pos,
-                        bufferedPercent = buffered
-                    )
-                }
-                delay(1.seconds / 30) // ~30fps updates
+                _state.update { it.copy(positionMs = player.currentPosition, bufferedPercent = player.bufferedPercentage) }
+                delay(1.seconds / 30)
             }
         }
     }
@@ -214,18 +172,18 @@ class VideoPlayerViewModel @AssistedInject constructor(
         viewModelScope.launch(Dispatchers.IO) {
             val fps = try {
                 MediaMetadataRetriever().use { r ->
+                    // ФІКС: Підтримка HTTP URL
+                    val isServerFile = media.path.startsWith("http")
                     if (encrypted) {
                         decryptedFile?.inputStream()?.use { r.setDataSource(it.fd) }
+                    } else if (isServerFile) {
+                        r.setDataSource(media.path, HashMap<String, String>())
                     } else {
                         r.setDataSource(appContext, media.getUri())
                     }
-                    r.extractMetadata(MediaMetadataRetriever.METADATA_KEY_CAPTURE_FRAMERATE)
-                        ?.toFloat()
-                        ?: 60f
+                    r.extractMetadata(MediaMetadataRetriever.METADATA_KEY_CAPTURE_FRAMERATE)?.toFloat() ?: 60f
                 }
-            } catch (_: Exception) {
-                60f
-            }
+            } catch (_: Exception) { 60f }
             _state.update { it.copy(frameRate = fps) }
         }
     }

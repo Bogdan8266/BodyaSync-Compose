@@ -168,6 +168,8 @@ kotlin {
 
 dependencies {
     implementation(libs.androidx.lifecycle.process)
+    implementation(libs.androidx.material3)
+    implementation(libs.androidx.foundation)
     runtimeOnly(libs.androidx.profileinstaller)
     implementation(project(":libs:cropper"))
     "baselineProfile"(project(mapOf("path" to ":baselineprofile")))
@@ -282,7 +284,8 @@ dependencies {
 
     // Composables - Core
     implementation(libs.core)
-
+    implementation(libs.retrofit)
+    implementation(libs.converter.gson)
     // Worker
     implementation(libs.androidx.work.runtime.ktx)
 

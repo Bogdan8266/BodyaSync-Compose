@@ -67,9 +67,10 @@ class GalleryApp : Application(), SingletonSketch.Factory, Configuration.Provide
 
         globalImageOptions(
             ImageOptions {
-                crossfade(false)
+                crossfade(true)
                 precision(Precision.LESS_PIXELS)
                 saveCellularTraffic(false)
+
             }
         )
     }.build()

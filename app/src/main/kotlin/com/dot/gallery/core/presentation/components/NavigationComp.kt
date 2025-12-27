@@ -68,6 +68,7 @@ import com.dot.gallery.feature_node.presentation.settings.SettingsScreen
 import com.dot.gallery.feature_node.presentation.settings.subsettings.SettingsCustomizationScreen
 import com.dot.gallery.feature_node.presentation.settings.subsettings.SettingsGeneralScreen
 import com.dot.gallery.feature_node.presentation.settings.subsettings.SettingsSmartFeaturesScreen
+import com.dot.gallery.feature_node.presentation.settings.subsettings.SettingsSyncScreen
 import com.dot.gallery.feature_node.presentation.settings.subsettings.SettingsThemesScreen
 import com.dot.gallery.feature_node.presentation.setup.SetupScreen
 import com.dot.gallery.feature_node.presentation.timeline.TimelineScreen
@@ -539,7 +540,10 @@ fun NavigationComp(
                     animatedContentScope = this
                 )
             }
-
+            // ... десь всередині NavHost ...
+            composable(Screen.SettingsSyncScreen.route) {
+                SettingsSyncScreen()
+            }
             composable(Screen.MediaViewScreen.idAndLocation()) { backStackEntry ->
                 val mediaId: Long = remember(backStackEntry) {
                     backStackEntry.arguments?.getString("mediaId")?.toLongOrNull() ?: -1

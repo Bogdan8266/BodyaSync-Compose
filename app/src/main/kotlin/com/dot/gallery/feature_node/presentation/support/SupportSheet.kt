@@ -56,7 +56,7 @@ fun SupportSheet(
             OptionItem(
                 text = "PayPal",
                 onClick = {
-                    uriHandler.openUri("https://www.paypal.com/paypalme/iacobionut01")
+                    uriHandler.openUri("https://www.paypal.com/paypalme/Bodya")
                 }
             ),
             OptionItem(

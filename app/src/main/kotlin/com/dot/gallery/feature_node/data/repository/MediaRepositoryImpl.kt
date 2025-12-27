@@ -4,14 +4,14 @@
  */
 
 package com.dot.gallery.feature_node.data.repository
-
+import com.dot.gallery.core.Constants
+import com.dot.gallery.feature_node.presentation.util.getDate
 import android.content.ContentValues
 import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.location.Geocoder
-import android.net.Uri
 import android.os.Environment
 import android.provider.MediaStore
 import androidx.activity.result.ActivityResultLauncher
@@ -82,13 +82,22 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import java.io.File
+import com.dot.gallery.feature_node.data.remote.ApiService // Додай цей імпорт
+import android.net.Uri // Переконайся, що є
+import kotlinx.coroutines.flow.flow // Додай flow builder
+import androidx.datastore.preferences.core.stringPreferencesKey
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
+
+
 
 class MediaRepositoryImpl(
     private val context: Context,
     private val workManager: WorkManager,
     private val database: InternalDatabase,
     private val keychainHolder: KeychainHolder,
-    private val geocoder: Geocoder?
+    private val geocoder: Geocoder?,
+    private val apiService: ApiService
 ) : MediaRepository {
 
     private val contentResolver = context.contentResolver
@@ -107,14 +116,63 @@ class MediaRepositoryImpl(
     /**
      * TODO: Add media reordering
      */
+    /**
+     * ОНОВЛЕНИЙ МЕТОД GET MEDIA (Версія 2.0 - Фікс багів)
+     */
     @OptIn(ExperimentalCoroutinesApi::class)
-    override fun getMedia(): Flow<Resource<List<UriMedia>>> =
-        MediaFlow(
-            contentResolver = contentResolver,
-            buckedId = MediaStoreBuckets.MEDIA_STORE_BUCKET_TIMELINE.id
-        ).flowData().map {
-            Resource.Success(MediaOrder.Date(OrderType.Descending).sortMedia(it))
-        }.flowOn(Dispatchers.IO)
+    override fun getMedia(): Flow<Resource<List<UriMedia>>> = flow {
+        try {
+            // 1. Дістаємо збережений IP з налаштувань (асинхронно, один раз на початку)
+            var baseUrl = context.dataStore.data.map { preferences ->
+                preferences[stringPreferencesKey("server_url")]
+            }.first() ?: "http://192.168.0.105:8000" // Твій дефолт, якщо налаштування пусті
+
+            // Гарантуємо, що адреса закінчується на слеш "/"
+            if (!baseUrl.endsWith("/")) {
+                baseUrl += "/"
+            }
+
+            // 2. Отримуємо список файлів з сервера
+            val serverItems = apiService.getGallery()
+
+            // 3. Формуємо посилання, використовуючи динамічний baseUrl
+            val uriMediaList = serverItems.map { item ->
+
+                // Вже не хардкод, а динамічна адреса!
+                val thumbnailUrl = "${baseUrl}thumbnail/${item.thumbnail}"
+                val originalUrl = "${baseUrl}original/${item.filename}"
+
+                // Сервер дає секунди -> переводимо в мілісекунди
+                val timestampMillis = (item.timestamp ?: 0.0).toLong() * 1000L
+
+                UriMedia(
+                    id = item.filename.hashCode().toLong(),
+                    label = item.filename,
+                    uri = Uri.parse(thumbnailUrl),
+                    path = originalUrl,
+                    relativePath = "Server/${item.type}",
+                    albumID = -999L,
+                    albumLabel = "Home Server",
+                    timestamp = timestampMillis,
+                    fullDate = timestampMillis.getDate(Constants.EXTENDED_DATE_FORMAT),
+                    mimeType = if (item.type == "video") "video/mp4" else "image/jpeg",
+                    duration = null,
+                    favorite = 0,
+                    trashed = 0,
+                    size = 0,
+                    expiryTimestamp = null,
+                    takenTimestamp = timestampMillis
+                )
+            }
+
+            val sortedList = MediaOrder.Date(OrderType.Descending).sortMedia(uriMediaList)
+            emit(Resource.Success(sortedList))
+
+        } catch (e: Exception) {
+            e.printStackTrace()
+            emit(Resource.Error("Error: ${e.localizedMessage}"))
+        }
+    }.flowOn(Dispatchers.IO)
 
     override fun getCompleteMedia(): Flow<Resource<List<UriMedia>>> =
         MediaFlow(

@@ -9,6 +9,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CloudSync
 import androidx.compose.material.icons.outlined.Dashboard
 import androidx.compose.material.icons.outlined.DashboardCustomize
 import androidx.compose.material.icons.outlined.Palette
@@ -67,6 +68,15 @@ fun SettingsScreen() {
             },
             screenPosition = Position.Middle
         )
+        val syncPref = rememberPreference(
+            icon = Icons.Default.CloudSync, // Або Icons.Outlined.CloudUpload (треба імпорт)
+            title = "Sync",
+            summary = "Server, backup, photo quality",
+            onClick = {
+                eventHandler.navigate(Screen.SettingsSyncScreen())
+            },
+            screenPosition = Position.Middle
+        )
         val smartPref = rememberPreference(
             icon = Icons.Outlined.SettingsSuggest,
             title = stringResource(R.string.ai_category),
@@ -76,8 +86,8 @@ fun SettingsScreen() {
             },
             screenPosition = Position.Bottom
         )
-        return remember(themePref, generalPref, customisationPref, smartPref) {
-            mutableStateListOf(themePref, generalPref, customisationPref, smartPref)
+        return remember(themePref, generalPref, syncPref, customisationPref, smartPref) {
+            mutableStateListOf(themePref, generalPref, syncPref, customisationPref, smartPref)
         }
     }
 
@@ -109,10 +119,12 @@ fun SettingsScreen() {
                     Icon(
                         imageVector = icon,
                         contentDescription = setting.title,
-                        tint = onBackgroundColors[index],
+                        // ФІКС: Додаємо % onBackgroundColors.size, щоб індекс не виходив за межі
+                        tint = onBackgroundColors[index % onBackgroundColors.size],
                         modifier = Modifier
                             .background(
-                                color = backgroundColors[index],
+                                // ФІКС: Додаємо % backgroundColors.size
+                                color = backgroundColors[index % backgroundColors.size],
                                 shape = CircleShape
                             )
                             .padding(8.dp)

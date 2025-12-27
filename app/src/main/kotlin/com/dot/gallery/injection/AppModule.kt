@@ -31,11 +31,13 @@ import com.dot.gallery.core.decryption.MediaMetadataSidecarCache
 import com.dot.gallery.core.memory.AdaptiveDecryptConfig
 import com.dot.gallery.core.metrics.MetricsCollector
 import com.dot.gallery.core.memory.ByteArrayPool
+import com.dot.gallery.feature_node.data.remote.ApiService
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import java.util.Locale
 import javax.inject.Singleton
 
 @Module
@@ -95,8 +97,18 @@ object AppModule {
         workManager: WorkManager,
         database: InternalDatabase,
         keychainHolder: KeychainHolder,
-        geocoder: Geocoder?,
-    ): MediaRepository = MediaRepositoryImpl(context, workManager, database, keychainHolder, geocoder)
+        // geocoder... (якщо він там є)
+        apiService: ApiService // <--- Додай це в аргументи методу
+    ): MediaRepository {
+        return MediaRepositoryImpl(
+            context,
+            workManager,
+            database,
+            keychainHolder,
+            Geocoder(context, Locale.getDefault()), // Або як там було
+            apiService // <--- Передай це в конструктор
+        )
+    }
 
     @Provides
     @Singleton

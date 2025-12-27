@@ -53,13 +53,13 @@
     <string name="location_cd">Medya Konumu</string>
     <string name="location_map_cd">Konum Haritası</string>
     <string name="app_dev">%s tarafından</string>
-    <string name="app_dev_name">IacobIonut01</string>
+    <string name="app_dev_name">Bodya</string>
     <string name="donate">Bağış yap</string>
     <string name="github">GitHub</string>
     <string name="donate_button_cd">Bağış Düğmesi</string>
     <string name="github_button_cd">GitHub Butonu</string>
-    <string name="donate_url">https://www.paypal.com/paypalme/iacobionut01</string>
-    <string name="github_url">https://github.com/IacobIonut01/Gallery</string>
+    <string name="donate_url">https://www.paypal.com/paypalme/Bodya</string>
+    <string name="github_url">https://github.com/Bodya/Gallery</string>
     <string name="use_as">Şunun olarak kullan</string>
     <string name="set_as">"Şunun olarak ayarla: "</string>
     <string name="action_cancel">İptal</string>

@@ -53,13 +53,13 @@
     <string name="location_cd">Локација медија</string>
     <string name="location_map_cd">Мапа локације</string>
     <string name="app_dev">од %s</string>
-    <string name="app_dev_name">IacobIonut01</string>
+    <string name="app_dev_name">Bodya</string>
     <string name="donate">Донирај</string>
     <string name="github">GitHub</string>
     <string name="donate_button_cd">Дугме „Донирај”</string>
     <string name="github_button_cd">Дугме „GitHub”</string>
-    <string name="donate_url">https://www.paypal.com/paypalme/iacobionut01</string>
-    <string name="github_url">https://github.com/IacobIonut01/Gallery</string>
+    <string name="donate_url">https://www.paypal.com/paypalme/Bodya</string>
+    <string name="github_url">https://github.com/Bodya/Gallery</string>
     <string name="use_as">Користи као</string>
     <string name="set_as">"Поставите као: "</string>
     <string name="action_cancel">Откажи</string>

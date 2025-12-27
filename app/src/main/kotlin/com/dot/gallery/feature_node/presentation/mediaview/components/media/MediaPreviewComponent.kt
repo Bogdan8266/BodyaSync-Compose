@@ -21,7 +21,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.IntOffset
 import androidx.media3.exoplayer.ExoPlayer
 import com.dot.gallery.feature_node.domain.model.Media
-import com.dot.gallery.feature_node.domain.util.isVideo
 import com.dot.gallery.feature_node.presentation.mediaview.components.video.VideoPlayer
 import com.dot.gallery.feature_node.presentation.util.LocalHazeState
 import dev.chrisbanes.haze.hazeSource
@@ -41,46 +40,57 @@ fun <T: Media> MediaPreviewComponent(
     offset: IntOffset,
     videoController: @Composable (ExoPlayer, MutableState<Boolean>, MutableLongState, Long, Int, Float) -> Unit,
 ) {
+    // ФІКС 1: Визначаємо, чи це відео, перевіряючи mimeType (для серверних файлів)
+    val realIsVideo = media?.let {
+        it.mimeType.startsWith("video") || it.duration != null
+    } ?: false
+
     AnimatedVisibility(
         modifier = Modifier
             .fillMaxSize()
+            // ФІКС 2: Повернули Haze (Блюр)
             .hazeSource(state = LocalHazeState.current),
         visible = media != null,
     ) {
         Box(
             modifier = Modifier.fillMaxSize().offset { offset },
         ) {
+            // ФІКС 3: Використовуємо realIsVideo замість media.isVideo
             AnimatedVisibility(
                 modifier = Modifier.fillMaxSize(),
-                visible = media!!.isVideo,
+                visible = realIsVideo,
                 enter = fadeIn(),
                 exit = fadeOut()
             ) {
-                VideoPlayer(
-                    modifier = modifier,
-                    media = media,
-                    playWhenReady = playWhenReady,
-                    videoController = videoController,
-                    onItemClick = onItemClick,
-                    onSwipeDown = onSwipeDown
-                )
+                if (media != null) {
+                    VideoPlayer(
+                        modifier = modifier,
+                        media = media,
+                        playWhenReady = playWhenReady,
+                        videoController = videoController,
+                        onItemClick = onItemClick,
+                        onSwipeDown = onSwipeDown
+                    )
+                }
             }
 
             AnimatedVisibility(
                 modifier = Modifier.fillMaxSize(),
-                visible = !media.isVideo,
+                visible = !realIsVideo,
                 enter = fadeIn(),
                 exit = fadeOut()
             ) {
-                ZoomablePagerImage(
-                    modifier = modifier,
-                    media = media,
-                    uiEnabled = uiEnabled,
-                    rotationDisabled = rotationDisabled,
-                    onImageRotated = onImageRotated,
-                    onItemClick = onItemClick,
-                    onSwipeDown = onSwipeDown
-                )
+                if (media != null) {
+                    ZoomablePagerImage(
+                        modifier = modifier,
+                        media = media,
+                        uiEnabled = uiEnabled,
+                        rotationDisabled = rotationDisabled,
+                        onImageRotated = onImageRotated,
+                        onItemClick = onItemClick,
+                        onSwipeDown = onSwipeDown
+                    )
+                }
             }
         }
     }

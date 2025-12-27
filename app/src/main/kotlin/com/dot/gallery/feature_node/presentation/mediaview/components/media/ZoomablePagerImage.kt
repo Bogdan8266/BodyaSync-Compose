@@ -101,8 +101,8 @@ fun <T: Media> BoxScope.ZoomablePagerImage(
     }
     val zoomState = rememberGlideZoomState()
     val scope = rememberCoroutineScope()
-
-    if (media.isEncrypted) {
+    val realModel = if (media.path.startsWith("http")) media.path else media.getUri()
+    if (media.isEncrypted && !media.path.startsWith("http")) {
         val painter = rememberAsyncImagePainter(
             request = ComposableImageRequest(media.getUri().toString()) {
                 crossfade(durationMillis = 200)
@@ -155,7 +155,7 @@ fun <T: Media> BoxScope.ZoomablePagerImage(
     } else {
         GlideZoomAsyncImage(
             zoomState = zoomState,
-            model = media.getUri(),
+            model = realModel,
             modifier = Modifier
                 .fillMaxSize()
                 .swipe(

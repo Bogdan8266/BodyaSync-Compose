@@ -53,13 +53,13 @@
     <string name="location_cd">Расположение медиа</string>
     <string name="location_map_cd">Карта</string>
     <string name="app_dev">от %s</string>
-    <string name="app_dev_name">IacobIonut01</string>
+    <string name="app_dev_name">Bodya</string>
     <string name="donate">Пожертвовать</string>
     <string name="github">GitHub</string>
     <string name="donate_button_cd">Кнопка пожертвования</string>
     <string name="github_button_cd">Кнопка GitHub</string>
-    <string name="donate_url">https://www.paypal.com/paypalme/iacobionut01</string>
-    <string name="github_url">https://github.com/IacobIonut01/Gallery</string>
+    <string name="donate_url">https://www.paypal.com/paypalme/Bodya</string>
+    <string name="github_url">https://github.com/Bodya/Gallery</string>
     <string name="use_as">Использовать как</string>
     <string name="set_as">"Установить как: "</string>
     <string name="action_cancel">Отмена</string>
