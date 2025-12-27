@@ -1,49 +1,71 @@
-# Gallery
-> An Android Gallery app built with Jetpack Compose.
-> 
-> The goal of this project is to create and bring the Gallery app everyone wants, with the features everyone needs. FOSS
-
-![Downloads](https://img.shields.io/github/downloads/Bodya/Gallery/total?color=%23247EE0&label=Downloads)
-[![CI](https://github.com/Bodya/Gallery/actions/workflows/nightly.yml/badge.svg?branch=main)](https://github.com/Bodya/Gallery/actions/workflows/nightly.yml)
-![License](https://img.shields.io/github/license/Bodya/Gallery?color=%23247EE0)
-[![Crowdin](https://badges.crowdin.net/gallery-compose/localized.svg)](https://crowdin.com/project/gallery-compose)
-![GitHub Repo stars](https://img.shields.io/github/stars/Bodya/Gallery?color=%23247EE0)
-
-![](./screenshots/preview.png)
-[![Crowdin](./screenshots/items/support_banner.png)](https://crowdin.com/project/gallery-compose)
-[![Community](./screenshots/items/community_banner.png)](https://t.me/GalleryCompose)
-
-## Download
-[<img src="https://fdroid.gitlab.io/artwork/badge/get-it-on.png"
-    alt="Get it on F-Droid"
-    height="80">](https://f-droid.org/packages/com.dot.gallery)
-[<img 
-    alt='Get it on Google Play'
-    src='https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png'
-    height="80" />](https://play.google.com/store/apps/details?id=com.dot.gallery.gplay&pcampaignid=pcampaignidMKT-Other-global-all-co-prtnr-py-PartBadge-Mar2515-1)
-[<img 
-    alt='Get it on GitHub'
-    src='./screenshots/items/get-it-on-github.png'
-    height="80" />](https://github.com/Bodya/Gallery/releases/latest)
-
-## Support
-- Translate the project using the link from above
-- Donations:
-    - Use the links on the right side of the repo (Sponsor me)
-    - More options available in-app (Settings -> Donate)
-## Frequent Questions
-- Why Google Play version is 'Paid'?
-    - It's just another way to support the project while getting back automatic updates via Google Play
-- Why Android 11 is the minimum version required?
-    - Some Media features and APIs require Android 11 as a minimum version [Trash feature, most APIs used in the app]
-- Will you support lower android versions?
-    - While this is not a priority right now, I do have in mind to include support for lower Android versions at a cost of reduced features. If anyone volntueers to do so before me can request a pull request.
-- Can I verify the downloaded APK file?
-    - Checksums of APKs are provided in the release notes. The signing certificate fingerprint is listed below:
-      - SHA-256: `78:46:05:DD:50:75:BE:05:82:78:A5:42:5C:BD:E5:21:31:62:CB:B4:59:1B:44:28:F4:4E:75:E0:8C:C6:43:8A`
-      - SHA-1: `AD:93:69:27:F2:3B:33:99:FC:C0:B2:8A:25:44:C8:1C:AA:42:B0:9A`
-      - MD5: `73:FC:3C:60:14:D3:69:6D:1B:DA:34:F1:BF:5A:33:3C`
-- Will you add [X] feature?
-    - Please open a new feature request under 'Issues' tab and if the feature will be considered useful and possible can be added.
-- Can you remove permission [X]?
-    - Several permissions (e.g. Internet connectivity, location) are for showing a map preview of your current photo location data. If you do not need this feature, you can download a `nomaps` release from the [Releases page](https://github.com/Bodya/Gallery/releases).
+📸 Server-First Gallery (Jetpack Compose Fork)
+![alt text](https://img.shields.io/badge/STATUS-BATTLE_TESTED-red?style=for-the-badge)
+![alt text](https://img.shields.io/badge/TECH-JETPACK_COMPOSE-green?style=for-the-badge)
+![alt text](https://img.shields.io/badge/SERVER-SELF_HOSTED-orange?style=for-the-badge)
+💀 Про проект: Забудь про пам'ять телефону
+Слухай сюди. Це не та солодка "Галерея", до якої ти звик. Це — серйозний інструмент, переписаний на Jetpack Compose, який плювати хотів на внутрішню пам'ять твого смартфона.
+Вся суть проста: твій телефон — це лише вікно. Склад — на твоєму сервері. Ця крихітка створена, щоб бути легкою, швидкою і злою. Це як Nextcloud Photos, тільки для тих, хто цінує швидкість і має слабке залізо, а не суперкомп'ютер NASA.
+💥 Головний Калібр (Основні фішки)
+🚀 Медіа-сховище: Твій особистий Форт-Нокс
+Твої фото і відео не засмічують телефон. Вони живуть на базі.
+Працює на чому завгодно, що має пульс (Інтернет) і пару дисків:
+VPS / VDS
+Домашній сервер
+Raspberry Pi
+Будь-яка "картопля", здатна запустити серверну частину.
+🖼 Агресивні Прев'ю (Killer Feature)
+Ось тут Nextcloud починає плакати в кутку. Він захлинається на слабкому інтернеті. Я пішов іншим шляхом.
+Ми використовуємо різні "стволи" (endpoints) для оригіналів і прев'ю.
+Прев'юшки проходять через м'ясорубку:
+Жорсткий ресайз.
+Безжальне стиснення JPEG (якість 50-70%).
+Вага одного фото — смішні 5-10 КБ.
+Результат: Ти гортаєш стрічку з сотнями фото на 4G, і вона летить, як куля. Ніяких "нескінченних завантажень" старих альбомів. Ти бачиш, що на фото, миттєво. Налаштування стиснення можна крутити і на сервері, і на клієнті.
+🧠 Розумний Кеш в RAM
+Сервер не тупий. Він тримає прев'ю в оперативці. Навіщо щоразу смикати жорсткі диски?
+Диски сплять (паркуються).
+Шуму нуль.
+Енергію економимо.
+Швидкість — космічна.
+🔄 Автоматична Синхронізація
+Ти натискаєш кнопку затвора — файл летить на базу через /upload. Все як у Google Photos, тільки дані твої. Працює чітко, перевірено в бою.
+📁 Файловий Менеджер
+Окремий екран для брудних справ. Треба закинути документ? Скачати архів? Створити папку? Легко. Ти керуєш файлами на сервері прямо з телефону.
+🎨 Вигляд на мільйон
+Зроблено на Jetpack Compose з дотриманням гайдлайнів Material 3 Expressive. Чисто, мінімалістично, без зайвого мотлоху. Тільки функціонал.
+💣 Секретна зброя: Інтеграція з Telegram
+Ми знаємо, як це буває: ти увімкнув автовидалення фото з телефону, щоб звільнити місце. І тут треба терміново скинути той самий кадр кенту в Телеграм. Що робити? Качати назад? Ні.
+Я розробляю другий проект, який працює в парі з цим сервером. Це Userbot.
+У твоєму Телеграмі, біля скріпки, з'являється моя кнопка.
+Вона відкриває галерею (виглядає так само круто).
+Ти вибираєш фото чи відео, якого немає у тебе на телефоні.
+Сервер сам кидає файл у чат. Напряму. Без завантаження на телефон.
+Для відео: Сервер швидко його перетискає і шпуляє через стабільний дротовий інет.
+Для фото: Те саме. Максимально швидкий запит.
+Це робить функцію "очищення пам'яті телефону" реально корисною, а не головним болем.
+🔗 [Посилання на репозиторій інтеграції з Telegram]
+🛠 Поради бувалого (Рекомендоване залізо)
+Щоб ця система працювала як годинник, слухай мою пораду:
+Диски: Став RAID. Дані треба берегти.
+Мережа: Тільки кабель (Ethernet). Wi-Fi залиш для кав'ярень. Стабільність — це закон.
+ОС: Будь-який Linux.
+Залізо: Слабке? Не проблема. Цей код написаний так, щоб виживати там, де інші вмирають.
+📸 Речові докази (Скріншоти)
+Краще один раз побачити.
+Головна сітка	Перегляд медіа	Файловий менеджер	Telegram Інтеграція
+![alt text](link_to_grid_img)
+![alt text](link_to_viewer_img)
+![alt text](link_to_files_img)
+![alt text](link_to_tg_img)
+(Закинь сюди реальні скріни, не тягни гуму)			
+⚠️ Статус
+Стан: Активна розробка.
+Надійність: Перевірено в реальних умовах (Battle Tested).
+Готовність: Працює для мене, працюватиме і для тебе, якщо руки з правильного місця. Доки напишу пізніше, зараз немає часу.
+🧠 Філософія
+Я зробив це тому, що:
+Nextcloud — жирний і повільний.
+Мобільний інтернет часто лажає.
+Прев'юшки не повинні гальмувати твоє життя.
+Продуктивність понад усе. Сервер — король. Телефон — просто пульт.
+Є питання? Створюй Issue. Але спершу читай код.
