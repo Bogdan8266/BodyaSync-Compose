@@ -29,7 +29,11 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import com.bumptech.glide.Glide
+import com.bumptech.glide.Priority
 import com.bumptech.glide.integration.compose.GlideImage
+import com.bumptech.glide.load.engine.DiskCacheStrategy
+import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
 import com.bumptech.glide.load.resource.gif.GifDrawable
 import com.dot.gallery.core.Constants.DEFAULT_TOP_BAR_ANIMATION_DURATION
 import com.dot.gallery.core.Settings
@@ -67,6 +71,7 @@ fun <T: Media> BoxScope.ZoomablePagerImage(
     onItemClick: () -> Unit,
     onSwipeDown: () -> Unit
 ) {
+    val context = LocalContext.current
     val feedbackManager = rememberFeedbackManager()
     var isRotating by rememberSaveable(media) { mutableStateOf(false) }
     var currentRotation by rememberSaveable(media) { mutableIntStateOf(0) }
@@ -74,6 +79,13 @@ fun <T: Media> BoxScope.ZoomablePagerImage(
         targetValue = if (isRotating) 90f else 0f,
         label = "rotationAnimation"
     )
+
+    val isServerFile = media.path.startsWith("http")
+    val mainModel = if (isServerFile) media.path else media.getUri()
+    val thumbnailModel = media.getUri()
+
+    // --- БЛЮР ФОН ---
+    // Це залишаємо як є, воно приховує чорний фон поки вантажиться основне фото
     ProvideBatteryStatus {
         val allowBlur by Settings.Misc.rememberAllowBlur()
         val isPowerSavingMode = LocalBatteryStatus.current.isPowerSavingMode
@@ -88,21 +100,22 @@ fun <T: Media> BoxScope.ZoomablePagerImage(
                     .fillMaxSize()
                     .alpha(blurAlpha)
                     .blur(100.dp),
-                model = media.getUri(),
+                model = thumbnailModel,
                 contentDescription = null,
                 contentScale = ContentScale.Crop,
                 requestBuilderTransform = {
-                    it.override(600)
+                    it.override(200)
                         .signature(GlideInvalidation.signature(media))
-                        .thumbnail(it.clone().sizeMultiplier(0.1f))
                 }
             )
         }
     }
+
     val zoomState = rememberGlideZoomState()
     val scope = rememberCoroutineScope()
-    val realModel = if (media.path.startsWith("http")) media.path else media.getUri()
-    if (media.isEncrypted && !media.path.startsWith("http")) {
+
+    if (media.isEncrypted && !isServerFile) {
+        // ... (Код для зашифрованих файлів залишаємо без змін)
         val painter = rememberAsyncImagePainter(
             request = ComposableImageRequest(media.getUri().toString()) {
                 crossfade(durationMillis = 200)
@@ -115,12 +128,15 @@ fun <T: Media> BoxScope.ZoomablePagerImage(
             contentScale = ContentScale.Fit,
             filterQuality = FilterQuality.None,
         )
-        val context = LocalContext.current
-        val keychainHolder = remember {
-            KeychainHolder(context)
-        }
+        val keychainHolder = remember { KeychainHolder(context) }
         LaunchedEffect(zoomState.subsampling) {
-            zoomState.subsampling.setRegionDecoders(listOf(EncryptedRegionDecoder.Factory(keychainHolder)))
+            zoomState.subsampling.setRegionDecoders(
+                listOf(
+                    EncryptedRegionDecoder.Factory(
+                        keychainHolder
+                    )
+                )
+            )
             zoomState.setSubsamplingImage(media.asSubsamplingImage(context))
         }
         ZoomImage(
@@ -128,12 +144,9 @@ fun <T: Media> BoxScope.ZoomablePagerImage(
             painter = painter,
             modifier = Modifier
                 .fillMaxSize()
-                .swipe(
-                    onSwipeDown = onSwipeDown
-                )
-                .graphicsLayer {
-                    rotationZ = if (isRotating) rotationAnimation else 0f
-                }.then(modifier),
+                .swipe(onSwipeDown = onSwipeDown)
+                .graphicsLayer { rotationZ = if (isRotating) rotationAnimation else 0f }
+                .then(modifier),
             onTap = { onItemClick() },
             onLongPress = {
                 if (!rotationDisabled) {
@@ -153,48 +166,74 @@ fun <T: Media> BoxScope.ZoomablePagerImage(
             scrollBar = null
         )
     } else {
-        GlideZoomAsyncImage(
-            zoomState = zoomState,
-            model = realModel,
-            modifier = Modifier
-                .fillMaxSize()
-                .swipe(
-                    onSwipeDown = onSwipeDown
-                )
-                .graphicsLayer {
-                    rotationZ = if (isRotating) rotationAnimation else 0f
+        // --- ЛОГІКА ДЛЯ ЗВИЧАЙНИХ І СЕРВЕРНИХ ФОТО (ВИПРАВЛЕНА) ---
+
+        // Використовуємо Box, щоб накласти мініатюру під оригінал
+        androidx.compose.foundation.layout.Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            // ШАР 1: Мініатюра (Фон)
+            // Вона з'являється миттєво і тримає місце, поки вантажиться оригінал.
+            // Оскільки це окремий Composable, він слухається ContentScale.Fit і стоїть чітко по центру.
+            GlideImage(
+                model = thumbnailModel,
+                contentDescription = null,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .graphicsLayer { rotationZ = if (isRotating) rotationAnimation else 0f }
+                    .then(modifier),
+                contentScale = ContentScale.Fit, // Розтягує по ширині/висоті, зберігаючи пропорції
+                alignment = Alignment.Center,    // Центрує
+                requestBuilderTransform = {
+                    it.diskCacheStrategy(DiskCacheStrategy.ALL)
+                        .dontAnimate() // Важливо: ніякої анімації появи для мініатюри
                 }
-                .then(modifier),
-            onTap = { onItemClick() },
-            onLongPress = {
-                if (!rotationDisabled) {
-                    scope.launch {
-                        isRotating = true
-                        feedbackManager.vibrate()
-                        currentRotation += 90
-                        onImageRotated(currentRotation)
-                        delay(350)
-                        zoomState.zoomable.rotate(currentRotation)
-                        isRotating = false
+            )
+
+            // ШАР 2: Оригінал (Zoomable)
+            // Він накладається зверху. Ми прибрали з нього .thumbnail(), щоб не ламати логіку.
+            GlideZoomAsyncImage(
+                zoomState = zoomState,
+                model = mainModel,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .swipe(onSwipeDown = onSwipeDown)
+                    .graphicsLayer { rotationZ = if (isRotating) rotationAnimation else 0f }
+                    .then(modifier),
+                contentScale = ContentScale.Fit, // Має співпадати з шаром 1
+                alignment = Alignment.Center,    // Має співпадати з шаром 1
+                onTap = { onItemClick() },
+                onLongPress = {
+                    if (!rotationDisabled) {
+                        scope.launch {
+                            isRotating = true
+                            feedbackManager.vibrate()
+                            currentRotation += 90
+                            onImageRotated(currentRotation)
+                            delay(350)
+                            zoomState.zoomable.rotate(currentRotation)
+                            isRotating = false
+                        }
                     }
-                }
-            },
-            alignment = Alignment.Center,
-            contentDescription = media.label,
-            requestBuilderTransform = {
-                var builder = it
-                    .signature(GlideInvalidation.signature(media))
-                    .thumbnail(it.clone().sizeMultiplier(0.1f))
+                },
+                contentDescription = media.label,
+                requestBuilderTransform = { requestBuilder ->
+                    var builder = requestBuilder
+                        // 🔥 ПРИБРАНО .thumbnail() — це корінь зла
+                        // Вмикаємо плавний перехід. Коли оригінал завантажиться, він плавно перекриє мініатюру знизу.
+                        .transition(DrawableTransitionOptions.withCrossFade(300))
+                        .signature(GlideInvalidation.signature(media))
+                        .priority(Priority.HIGH)
+                        .diskCacheStrategy(DiskCacheStrategy.ALL)
 
-                if (media.label.contains(".gif", ignoreCase = true)) {
-                    builder = builder.decode(GifDrawable::class.java)
-                }
-
-                builder
-            },
-            scrollBar = null
-        )
+                    if (media.label.contains(".gif", ignoreCase = true)) {
+                        builder = builder.decode(GifDrawable::class.java)
+                    }
+                    builder
+                },
+                scrollBar = null
+            )
+        }
     }
 }
-
-
