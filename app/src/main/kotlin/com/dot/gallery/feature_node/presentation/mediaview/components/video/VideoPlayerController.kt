@@ -5,9 +5,11 @@
 
 package com.dot.gallery.feature_node.presentation.mediaview.components.video
 
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -19,7 +21,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.VolumeMute
 import androidx.compose.material.icons.automirrored.outlined.VolumeUp
@@ -30,12 +31,13 @@ import androidx.compose.material.icons.outlined.Speed
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearWavyProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ProgressIndicatorDefaults
 import androidx.compose.material3.RadioButton
-import androidx.compose.material3.Slider
-import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -50,15 +52,18 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import androidx.media3.exoplayer.ExoPlayer
@@ -99,12 +104,12 @@ fun VideoPlayerController(
             var isMuted by rememberSaveable { mutableStateOf(player.volume == 0f) }
             var currentVolume by rememberSaveable { mutableFloatStateOf(player.volume) }
 
-            // Keep player volume in sync when configuration changes / media swaps
+            // Keep player volume in sync
             LaunchedEffect(LocalConfiguration.current, player.currentMediaItem, isMuted) {
                 player.volume = if (isMuted) 0f else currentVolume
             }
 
-            // Playback speed / menu
+            // Playback speed
             var auto by rememberSaveable { mutableStateOf(false) }
             var showMenu by rememberSaveable { mutableStateOf(false) }
             var playbackSpeed by rememberSaveable { mutableFloatStateOf(1f) }
@@ -124,19 +129,18 @@ fun VideoPlayerController(
                 showMenu = false
             }
 
-            // --- Scrubbing logic (flicker-free) ---
-            // Separate slider value from currentTime while user is interacting.
+            // --- Scrubbing Logic ---
             var isScrubbing by rememberSaveable { mutableStateOf(false) }
             var wasPlayingBeforeScrub by remember { mutableStateOf(false) }
             var sliderValue by rememberSaveable { mutableFloatStateOf(currentTime.longValue.toFloat()) }
 
-            // Update slider position from playback ONLY when not scrubbing.
             LaunchedEffect(currentTime.longValue, isScrubbing) {
                 if (!isScrubbing) {
                     sliderValue = currentTime.longValue.toFloat()
                 }
             }
 
+            // --- Top Buttons Row ---
             Box(contentAlignment = Alignment.TopEnd) {
                 DropdownMenu(
                     expanded = showMenu,
@@ -151,8 +155,7 @@ fun VideoPlayerController(
                             },
                             leadingIcon = {
                                 RadioButton(
-                                    selected = (playbackSpeed == speed.speed && !speed.isAuto) ||
-                                            (speed.isAuto && auto),
+                                    selected = (playbackSpeed == speed.speed && !speed.isAuto) || (speed.isAuto && auto),
                                     onClick = {
                                         playbackSpeed = speed.speed
                                         auto = speed.isAuto
@@ -199,6 +202,7 @@ fun VideoPlayerController(
                 )
             }
 
+            // --- Timeline Row (Wavy Scrubber) ---
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -206,7 +210,6 @@ fun VideoPlayerController(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
-                // Current time (uses sliderValue for instant feedback while scrubbing)
                 Text(
                     modifier = Modifier.width(52.dp),
                     text = sliderValue.toLong().formatMinSec(),
@@ -216,75 +219,26 @@ fun VideoPlayerController(
                     textAlign = TextAlign.Center
                 )
 
-                val trackModifier = Modifier
-                    .fillMaxWidth()
-                    .height(12.dp)
-                    .clip(RoundedCornerShape(100))
-
+                // ЗАМІНА SLIDER НА WAVY SCRUBBER
                 Box(Modifier.weight(1f)) {
-                    // Buffered track (disabled slider)
-                    val disabledColors = SliderDefaults.colors(
-                        disabledThumbColor = Color.Transparent,
-                        disabledInactiveTrackColor = Color.DarkGray.copy(alpha = 0.4f),
-                        disabledActiveTrackColor = Color.Gray.copy(alpha = 0.8f),
-                        disabledActiveTickColor = Color.Transparent
-                    )
-                    Slider(
-                        modifier = Modifier.fillMaxWidth(),
-                        value = buffer.toFloat(),
-                        enabled = false,
-                        onValueChange = {},
-                        thumb = {
-                            SliderDefaults.Thumb(
-                                interactionSource = remember { MutableInteractionSource() },
-                                thumbSize = DpSize(0.dp, 0.dp),
-                                colors = disabledColors,
-                                enabled = false
-                            )
-                        },
-                        track = {
-                            SliderDefaults.Track(
-                                modifier = trackModifier,
-                                sliderState = it,
-                                colors = disabledColors,
-                                drawStopIndicator = null,
-                                drawTick = { _, _ -> },
-                                enabled = false,
-                                thumbTrackGapSize = 0.dp
-                            )
-                        },
-                        valueRange = 0f..100f,
-                        colors = disabledColors
-                    )
-
-                    // Active (position) slider
-                    val activeColors = SliderDefaults.colors(
-                        thumbColor = Color.White,
-                        activeTrackColor = Color.White,
-                        activeTickColor = Color.Transparent,
-                        inactiveTrackColor = Color.Transparent
-                    )
-                    Slider(
-                        modifier = Modifier.fillMaxWidth(),
-                        value = sliderValue.coerceIn(0f, (totalTime).coerceAtLeast(0L).toFloat()),
-                        onValueChange = { newVal ->
+                    WavyVideoScrubber(
+                        value = sliderValue,
+                        total = totalTime.toFloat(),
+                        buffer = buffer.toFloat(),
+                        onScrub = { newVal ->
                             if (!isScrubbing) {
                                 isScrubbing = true
                                 wasPlayingBeforeScrub = isPlaying.value
-                                // Pause playback while scrubbing to avoid fighting updates (optional)
-                                if (player.isPlaying) {
-                                    player.pause()
-                                }
+                                if (player.isPlaying) player.pause()
                             }
                             sliderValue = newVal
                         },
-                        onValueChangeFinished = {
+                        onScrubFinished = {
                             scope.launch {
                                 val target = sliderValue.toLong().coerceIn(0L, totalTime)
                                 if (player.currentPosition != target) {
                                     player.seekTo(target)
                                 }
-                                // Immediately reflect the seek in shared state for external UI
                                 currentTime.longValue = target
                                 isScrubbing = false
                                 if (wasPlayingBeforeScrub) {
@@ -296,30 +250,10 @@ fun VideoPlayerController(
                                     isPlaying.value = false
                                 }
                             }
-                        },
-                        valueRange = 0f..(if (totalTime > 0) totalTime.toFloat() else 0f),
-                        colors = activeColors,
-                        thumb = {
-                            SliderDefaults.Thumb(
-                                interactionSource = remember { MutableInteractionSource() },
-                                thumbSize = DpSize(2.dp, 18.dp),
-                                colors = activeColors
-                            )
-                        },
-                        track = {
-                            SliderDefaults.Track(
-                                modifier = trackModifier,
-                                sliderState = it,
-                                colors = activeColors,
-                                drawStopIndicator = null,
-                                drawTick = { _, _ -> },
-                                thumbTrackGapSize = 0.dp
-                            )
                         }
                     )
                 }
 
-                // Total time
                 Text(
                     modifier = Modifier.width(52.dp),
                     text = totalTime.formatMinSec(),
@@ -363,5 +297,79 @@ fun VideoPlayerController(
                 )
             }
         }
+    }
+}
+
+// --- НОВИЙ КОМПОНЕНТ ДЛЯ ХВИЛЯСТОГО ПРОГРЕСУ ---
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+fun WavyVideoScrubber(
+    value: Float,
+    total: Float,
+    buffer: Float,
+    onScrub: (Float) -> Unit,
+    onScrubFinished: () -> Unit
+) {
+    val progress = if (total > 0) value / total else 0f
+
+    // Плавна анімація прогресу
+    val animatedProgress by animateFloatAsState(
+        targetValue = progress,
+        animationSpec = ProgressIndicatorDefaults.ProgressAnimationSpec,
+        label = "wavyProgress"
+    )
+
+    // Стиль лінії (товста і заокруглена)
+    val thickStrokeWidth = with(LocalDensity.current) { 8.dp.toPx() }
+    val thickStroke = remember(thickStrokeWidth) {
+        Stroke(width = thickStrokeWidth, cap = StrokeCap.Round)
+    }
+
+    // Змінна для ширини компонента
+    var width by remember { mutableFloatStateOf(1f) }
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(30.dp) // Збільшена висота для зручності дотику
+            .onSizeChanged { width = it.width.toFloat() }
+            .pointerInput(Unit) {
+                // Обробка натискання (Tap)
+                detectTapGestures(
+                    onPress = { offset ->
+                        val newProgress = (offset.x / width).coerceIn(0f, 1f)
+                        onScrub(newProgress * total)
+                        tryAwaitRelease() // Чекаємо відпускання пальця
+                        onScrubFinished()
+                    }
+                )
+            }
+            .pointerInput(Unit) {
+                // Обробка перетягування (Drag)
+                detectHorizontalDragGestures(
+                    onDragEnd = { onScrubFinished() },
+                    onDragCancel = { onScrubFinished() },
+                    onDragStart = { offset ->
+                        val newProgress = (offset.x / width).coerceIn(0f, 1f)
+                        onScrub(newProgress * total)
+                    }
+                ) { change, _ ->
+                    val newProgress = (change.position.x / width).coerceIn(0f, 1f)
+                    onScrub(newProgress * total)
+                }
+            },
+        contentAlignment = Alignment.Center
+    ) {
+        // Сам індикатор (тільки для відображення)
+        LinearWavyProgressIndicator(
+            progress = { animatedProgress },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(12.dp), // Висота самої хвилі
+            stroke = thickStroke,
+            trackStroke = thickStroke,
+            color = MaterialTheme.colorScheme.primary,
+            trackColor = Color.White.copy(alpha = 0.3f)
+        )
     }
 }
