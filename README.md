@@ -137,7 +137,7 @@ Seeing once is better than hearing stories at a bar a hundred times.
 1.  **Clone it:** `git clone https://github.com/Bogdan8266/BodyaSync-Compose`
 2.  **Config Setup:** Punch in your server IP and ports.
 3.  **Build APK:** Android Studio is your friend.
-4.  **Launch Server Side:** (See backend repo link below).
+4.  <p>Launch Server Side: <a href="https://github.com/Bogdan8266/BodyaSync-Server">BodyaSync-Server</a>
 5.  **Enjoy.**
 
 ---
