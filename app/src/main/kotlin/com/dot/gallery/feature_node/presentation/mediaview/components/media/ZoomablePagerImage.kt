@@ -8,6 +8,7 @@ package com.dot.gallery.feature_node.presentation.mediaview.components.media
 import android.os.Build
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
@@ -56,7 +57,11 @@ import com.github.panpf.zoomimage.compose.glide.ExperimentalGlideComposeApi
 import com.github.panpf.zoomimage.rememberGlideZoomState
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-
+import com.bumptech.glide.request.RequestListener
+import com.bumptech.glide.load.DataSource
+import com.bumptech.glide.load.engine.GlideException
+import com.bumptech.glide.request.target.Target
+import android.graphics.drawable.Drawable
 @OptIn(ExperimentalGlideComposeApi::class,
     com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi::class
 )
@@ -166,16 +171,23 @@ fun <T: Media> BoxScope.ZoomablePagerImage(
             scrollBar = null
         )
     } else {
-        // --- ЛОГІКА ДЛЯ ЗВИЧАЙНИХ І СЕРВЕРНИХ ФОТО (ВИПРАВЛЕНА) ---
+        // --- ЛОГІКА ДЛЯ ЗВИЧАЙНИХ І СЕРВЕРНИХ ФОТО (Фінал) ---
 
-        // Використовуємо Box, щоб накласти мініатюру під оригінал
-        androidx.compose.foundation.layout.Box(
+        // 1. Стан для відстеження, чи завантажився оригінал
+        var isFullImageLoaded by remember { mutableStateOf(false) }
+
+        // 2. Анімація прозорості (alpha) для оригіналу
+        val fullImageAlpha by animateFloatAsState(
+            targetValue = if (isFullImageLoaded) 1f else 0f,
+            animationSpec = tween(durationMillis = 300), // Плавність 300мс
+            label = "imageFade"
+        )
+
+        Box(
             modifier = Modifier.fillMaxSize(),
             contentAlignment = Alignment.Center
         ) {
-            // ШАР 1: Мініатюра (Фон)
-            // Вона з'являється миттєво і тримає місце, поки вантажиться оригінал.
-            // Оскільки це окремий Composable, він слухається ContentScale.Fit і стоїть чітко по центру.
+            // ШАР 1: Мініатюра (Завжди видима знизу)
             GlideImage(
                 model = thumbnailModel,
                 contentDescription = null,
@@ -183,26 +195,28 @@ fun <T: Media> BoxScope.ZoomablePagerImage(
                     .fillMaxSize()
                     .graphicsLayer { rotationZ = if (isRotating) rotationAnimation else 0f }
                     .then(modifier),
-                contentScale = ContentScale.Fit, // Розтягує по ширині/висоті, зберігаючи пропорції
-                alignment = Alignment.Center,    // Центрує
+                contentScale = ContentScale.Fit,
+                alignment = Alignment.Center,
                 requestBuilderTransform = {
                     it.diskCacheStrategy(DiskCacheStrategy.ALL)
-                        .dontAnimate() // Важливо: ніякої анімації появи для мініатюри
+                        .dontAnimate()
+                        .dontTransform() // Важливо для позиціонування
                 }
             )
 
-            // ШАР 2: Оригінал (Zoomable)
-            // Він накладається зверху. Ми прибрали з нього .thumbnail(), щоб не ламати логіку.
+            // ШАР 2: Оригінал (Накладається зверху з анімацією)
             GlideZoomAsyncImage(
                 zoomState = zoomState,
                 model = mainModel,
                 modifier = Modifier
                     .fillMaxSize()
+                    // 🔥 КЛЮЧОВИЙ МОМЕНТ: Керуємо видимістю через Compose
+                    .alpha(fullImageAlpha)
                     .swipe(onSwipeDown = onSwipeDown)
                     .graphicsLayer { rotationZ = if (isRotating) rotationAnimation else 0f }
                     .then(modifier),
-                contentScale = ContentScale.Fit, // Має співпадати з шаром 1
-                alignment = Alignment.Center,    // Має співпадати з шаром 1
+                contentScale = ContentScale.Fit,
+                alignment = Alignment.Center,
                 onTap = { onItemClick() },
                 onLongPress = {
                     if (!rotationDisabled) {
@@ -220,12 +234,32 @@ fun <T: Media> BoxScope.ZoomablePagerImage(
                 contentDescription = media.label,
                 requestBuilderTransform = { requestBuilder ->
                     var builder = requestBuilder
-                        // 🔥 ПРИБРАНО .thumbnail() — це корінь зла
-                        // Вмикаємо плавний перехід. Коли оригінал завантажиться, він плавно перекриє мініатюру знизу.
-                        .transition(DrawableTransitionOptions.withCrossFade(300))
                         .signature(GlideInvalidation.signature(media))
                         .priority(Priority.HIGH)
+                        .fitCenter()
                         .diskCacheStrategy(DiskCacheStrategy.ALL)
+
+                    builder = builder.listener(object : RequestListener<Drawable> {
+                        override fun onLoadFailed(
+                            e: GlideException?,
+                            model: Any?,
+                            target: Target<Drawable>,
+                            isFirstResource: Boolean
+                        ): Boolean {
+                            return false
+                        }
+
+                        override fun onResourceReady(
+                            resource: Drawable,
+                            model: Any,
+                            target: Target<Drawable>,
+                            dataSource: DataSource,
+                            isFirstResource: Boolean
+                        ): Boolean {
+                            isFullImageLoaded = true
+                            return false
+                        }
+                    })
 
                     if (media.label.contains(".gif", ignoreCase = true)) {
                         builder = builder.decode(GifDrawable::class.java)
