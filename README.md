@@ -158,5 +158,5 @@ This is just one piece of the puzzle. Grab the full kit:
 *This code is written with blood and sweat. It runs stable, but if you find a bug — hit up the Issues. Don't be a stranger.*
 
 Made with ❤️ and ☕ by **[Bodya]**
-
+android kotlin jetpack-compose material-design-3 gallery-app self-hosted server-client nextcloud-alternative image-processing performance photo-gallery telegram-integration clean-architecture opensource
 </div>
