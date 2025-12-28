@@ -1,119 +1,122 @@
 <div align="center">
 
-# 💥 BodyaSync GALLERY (Jetpack Compose Fork )
+# 💥 BodyaSync GALLERY (Jetpack Compose Fork)
 
 <!-- BADGES START: ARSENAL -->
+<!-- ROW 1 -->
 ![Status](https://img.shields.io/badge/STATUS-BATTLE_TESTED-red?style=for-the-badge&logo=fire)
 ![Platform](https://img.shields.io/badge/PLATFORM-ANDROID-3DDC84?style=for-the-badge&logo=android&logoColor=white)
 ![Tech](https://img.shields.io/badge/TECH-JETPACK_COMPOSE-4285F4?style=for-the-badge&logo=jetpackcompose&logoColor=white)
 ![UI](https://img.shields.io/badge/DESIGN-MATERIAL_3_EXPRESSIVE-purple?style=for-the-badge&logo=materialdesign&logoColor=white)
+<br />
 
-<!-- SECOND ROW -->
+<!-- ROW 2 -->
 ![Server](https://img.shields.io/badge/SERVER-SELF_HOSTED-orange?style=for-the-badge&logo=linux&logoColor=white)
 ![Language](https://img.shields.io/badge/LANG-KOTLIN-7F52FF?style=for-the-badge&logo=kotlin&logoColor=white)
 ![Network](https://img.shields.io/badge/NETWORK-RETROFIT-square?style=for-the-badge)
 ![Optimization](https://img.shields.io/badge/SPEED-LIGHTNING-yellow?style=for-the-badge&logo=lightning)
+<br />
 
-<!-- THIRD ROW -->
+<!-- ROW 3 -->
 ![Storage](https://img.shields.io/badge/STORAGE-HDD_%2F_RAID-gray?style=for-the-badge&logo=hard-drive)
 ![Integration](https://img.shields.io/badge/INTEGRATION-TELEGRAM_USERBOT-2CA5E0?style=for-the-badge&logo=telegram&logoColor=white)
 ![License](https://img.shields.io/badge/LICENSE-MIT-green?style=for-the-badge)
 <!-- BADGES END -->
 
-<h3>⚡ Швидше кулі. Легше пір'їни. Жорсткіше твого колишнього. ⚡</h3>
+<h3>⚡ Faster than a bullet. Lighter than a feather. Harder than your ex. ⚡</h3>
 
 </div>
 
 ---
 
-## 💀 Про проект: Операція "Чистий Смартфон"
+## 💀 About: Operation "Squeaky Clean"
 
-Слухай сюди, ковбой. Це не та ванільна "Галерея", що йшла в комплекті з твоїм телефоном. Це **Server-First** монстр, переписаний на **Jetpack Compose**.
+Listen up, cowboy. This ain't that vanilla "Gallery" app that came pre-installed on your phone. This is a **Server-First** beast, rewritten in **Jetpack Compose**.
 
-Ми тут не граємось у пісочниці. Ця штука створена для однієї мети: **забрати навантаження з твого телефону і перекласти його на сервер**. Твій смартфон — це лише вікно. Весь склад боєприпасів (твої фото і відео) лежить у бункері (на сервері).
+We ain't playing in the sandbox here. This thing was built for one purpose: **to strip the load off your phone and dump it onto the server**. Your smartphone is just a window. The ammo dump (all your photos and videos) stays in the bunker (on the server).
 
-**Для кого це:**
-*   Для тих, у кого сервери збирають пил (VPS, Raspberry Pi, старі ПК).
-*   Для тих, хто ненавидить, коли пам'ять телефону забита мотлохом.
-*   Для тих, хто хоче швидкість, навіть якщо інтернет працює як черепаха.
+**Who is this for?**
+*   For those with servers gathering dust (VPS, Raspberry Pi, old PCs).
+*   For those who hate seeing "Storage Full" notifications.
+*   For those who crave speed, even when the internet is moving like a turtle.
 
 ---
 
-## 🥊 Nextcloud vs. Цей Проект: Чому ми перемагаємо
+## 🥊 Nextcloud vs. This Project: Why We Win
 
-Я пробував Nextcloud. Це як їздити на танку в супермаркет — потужно, але повільно і незручно.
+I tried Nextcloud. It’s like driving a tank to the grocery store — powerful, but slow and clunky.
 
-| Фіча | 🥊 Nextcloud / Інші | 🚀 (Цей Форк) |
+| Feature | 🥊 Nextcloud / Others | 🚀 (This Fork) |
 | :--- | :--- | :--- |
-| **Швидкість** | Захлинається на слабкому залізі. | Літає навіть на "картоплі" з дротами. |
-| **Прев'ю** | Вантажить повні картинки, жере трафік. | **Агресивне стиснення (5-10 КБ)**. Сотні фото за секунду. |
-| **Мережа** | Потрібен ідеальний 5G/Wi-Fi. | Працює гладко навіть на паршивому 3G/4G. |
-| **Зберігання** | Кешує все підряд. | Розумний RAM-кеш на сервері. |
+| **Speed** | Chokes on weak hardware. | Flies even on a potato with wires. |
+| **Preview** | Loads full images, eats data. | **Aggressive compression (5-10 KB)**. Hundreds of pics per second. |
+| **Network** | Needs perfect 5G/Wi-Fi. | Runs smooth even on crappy 3G/4G. |
+| **Storage** | Caches everything blindly. | Smart RAM cache on the server side. |
 
 ---
 
-## 🔥 Арсенал Можливостей (Features)
+## 🔥 The Arsenal (Features)
 
-### 1. 🖼️ Ультра-Легкі Прев'ю (Killer Feature)
-Ми розділили потоки. Оригінали лежать окремо, а для стрічки ми використовуємо спеціальні **Thumbnails**.
-*   **Стиснення:** Жорсткий JPEG (50-70% якості).
-*   **Вага:** Одне фото важить смішні **5-10 КБ**.
-*   **Результат:** Ти скролиш історію за 5 років назад, і картинки з'являються миттєво. Ніяких "бубликів" завантаження.
+### 1. 🖼️ Ultra-Light Previews (Killer Feature)
+We split the streams. Originals are stored separately, and for the feed, we use specialized **Thumbnails**.
+*   **Compression:** Hardcore JPEG (50-70% quality).
+*   **Weight:** A single photo weighs a laughable **5-10 KB**.
+*   **Result:** You scroll 5 years back into history, and images pop instantly. No loading donuts.
 
-### 2. 🧠 Smart RAM Caching (Тихий Режим)
-Сервер тримає прев'ю в оперативній пам'яті.
-*   **Навіщо?** Щоб не будити твої жорсткі диски (HDD) кожні 5 секунд.
-*   **Ефект:** Диски паркуються, шум зникає, енергія економиться. Сервер холодний і тихий, як професійний кілер.
+### 2. 🧠 Smart RAM Caching (Silent Mode)
+The server keeps previews in RAM.
+*   **Why?** So we don't wake up your HDDs every 5 seconds.
+*   **Effect:** Disks stay parked, noise is gone, energy is saved. The server stays cold and quiet like a pro hitman.
 
-### 3. 🔄 Авто-Синхронізація (Fire & Forget)
-Працює як швейцарський годинник. Ти зробив фото — воно полетіло на сервер через `/upload`.
-*   Після успішного завантаження — **автоматичне видалення з телефону** (опціонально).
-*   Твій телефон завжди чистий.
+### 3. 🔄 Auto-Sync (Fire & Forget)
+Works like a Swiss watch. You snap a photo — it flies to the server via `/upload`.
+*   After a successful upload — **automatic deletion from phone** (optional).
+*   Your phone stays pristine.
 
-### 4. 📁 Майже повноцінний Файловий Менеджер
-Окремий екран для серйозних справ.
-*   Створюй папки.
-*   Заливай документи/архіви.
-*   Качай файли назад на телефон.
-*   Повний контроль над файловою системою сервера.
+### 4. 📁 Almost Full-Blown File Manager
+A separate screen for serious business.
+*   Create folders.
+*   Upload docs/archives.
+*   Download files back to the phone.
+*   Full control over the server's file system.
 
 ### 5. 🎨 UI/UX: Material 3 Expressive
-Виглядає так, ніби зійшло з обкладинки журналу. Анімації плавні, інтерфейс не перевантажений. Тільки те, що потрібно для бою.
+Looks like it walked off a magazine cover. Smooth animations, interface isn't cluttered. Only what you need for the fight.
 
 ---
 
-## 💣 Секретна Зброя: Інтеграція з Telegram (Userbot)
+## 💣 Secret Weapon: Telegram Integration (Userbot)
 
-А тепер тримайся за стілець.
+Hold onto your seat for this one.
 
-**Проблема:** Ти видалив фото з телефону, щоб звільнити місце. Але тобі треба терміново скинути його кенту в Телеграм. Качати назад? **НІ.** Це для слабаків.
+**The Problem:** You deleted a photo from your phone to save space. But you need to send it to a homie in Telegram ASAP. Download it back first? **NO.** That's for the weak.
 
-**Рішення:** Я написав спеціального **Userbot'а та форк на Telergam**.
-1.  У твоєму чаті Telegram з'являється **спеціальна кнопка** (біля скріпки).
-2.  Відкривається ця Галерея (Web App / Interface).
-3.  Ти тицяєш на фото/відео (якого фізично немає на телефоні).
-4.  **СЕРВЕР САМ** відправляє файл у чат. Напряму.
+**The Solution:** I wrote a custom **Userbot and a Telegram fork**.
+1.  A **special button** appears in your Telegram chat (near the attachment clip).
+2.  Opens this Gallery (Web App / Interface).
+3.  You tap the photo/video (which physically isn't on your phone).
+4.  **THE SERVER ITSELF** sends the file to the chat. Directly.
 
-> 💡 **Фішка:** Відео перетискаються на льоту і летять через стабільний дротовий інтернет сервера. Ти економиш свій мобільний трафік і час.
+> 💡 **The Kicker:** Videos are compressed on the fly and fly out via the server's stable wired connection. You save your mobile data and time.
 
-🔗 **[ТУТ БУДЕ ПОСИЛАННЯ НА REPO З TELEGRAM БОТОМ]**
-
----
-
-## 🛠 Технічні Вимоги (Loadout)
-
-Щоб ця машина смерті працювала ідеально, тобі знадобиться:
-
-*   **Сервер:** Будь-який Linux (Ubuntu, Debian, Arch - байдуже).
-*   **Диски:** Рекомендую **RAID**. Дані люблять безпеку.
-*   **Інтернет:** **Ethernet (Кабель)**. Wi-Fi — це нестабільно, залиш його для хіпстерів.
-*   **Клієнт:** Android 10+ (бажано новіше, щоб Material 3 сяяв).
+🔗 **[LINK TO TELEGRAM BOT REPO WILL BE HERE]**
 
 ---
 
-## 📸 Докази (Screenshots)
+## 🛠 Loadout (Technical Requirements)
 
-Один раз побачити краще, ніж сто раз почути байки в барі.
+To make this death machine run perfectly, you'll need:
+
+*   **Server:** Any Linux (Ubuntu, Debian, Arch - whatever floats your boat).
+*   **Disks:** I recommend **RAID**. Data loves safety.
+*   **Internet:** **Ethernet (Cable)**. Wi-Fi is unstable, leave it for hipsters.
+*   **Client:** Android 10+ (newer is better for that sweet Material 3 glow).
+
+---
+
+## 📸 Proof (Screenshots)
+
+Seeing once is better than hearing stories at a bar a hundred times.
 
 <div align="center">
 
@@ -129,30 +132,30 @@
 
 ---
 
-## 🚀 Як Запустити (Quick Start)
+## 🚀 Quick Start
 
-1.  **Клонуй це:** `git clone https://github.com/Bogdan8266/BodyaSync-Compose`
-2.  **Налаштуй Config:** Пропиши IP свого сервера і порти.
-3.  **Збери APK:** Android Studio тобі в поміч.
-4.  **Запусти серверну частину:** (Див. посилання на бекенд репо нижче).
-5.  **Насолоджуйся.**
+1.  **Clone it:** `git clone https://github.com/Bogdan8266/BodyaSync-Compose`
+2.  **Config Setup:** Punch in your server IP and ports.
+3.  **Build APK:** Android Studio is your friend.
+4.  **Launch Server Side:** (See backend repo link below).
+5.  **Enjoy.**
 
 ---
 
-## 🔗 Пов'язані Проекти (The Ecosystem)
+## 🔗 The Ecosystem (Related Projects)
 
-Це лише частина пазлу. Забирай повний комплект:
+This is just one piece of the puzzle. Grab the full kit:
 
-*   🖥️ **[Server Side Repository]** — Мозок операції (Backend).
-*   🤖 **[Telegram Userbot Client]** — Твій зв'язковий у месенджері.
+*   🖥️ **[Server Side Repository]** — The Brains of the operation (Backend).
+*   🤖 **[Telegram Userbot Client]** — Your radio operator in the messenger.
 
 ---
 
 <div align="center">
 
 **⚠️ STATUS: UNDER ACTIVE DEVELOPMENT ⚠️**
-*Цей код пишеться кров'ю і потом. Працює стабільно, але якщо знайдеш баг — пиши в Issues.
-Не будь чужинцем.*
+<br>
+*This code is written with blood and sweat. It runs stable, but if you find a bug — hit up the Issues. Don't be a stranger.*
 
 Made with ❤️ and ☕ by **[Bodya]**
 
