@@ -99,7 +99,7 @@ Hold onto your seat for this one.
 
 > 💡 **The Kicker:** Videos are compressed on the fly and fly out via the server's stable wired connection. You save your mobile data and time.
 
-🔗 **[LINK TO TELEGRAM BOT REPO WILL BE HERE]**
+🔗 **[LINK TO TELEGRAM CLIENT TEMPORARILY UNAVAILABLE]**
 
 ---
 
@@ -146,8 +146,8 @@ Seeing once is better than hearing stories at a bar a hundred times.
 
 This is just one piece of the puzzle. Grab the full kit:
 
-*   🖥️ **[<a href="https://github.com/Bogdan8266/BodyaSync-Compose">BodyaSync-Compose</a>]** — The Brains of the operation (Backend).
-*   🤖 **[Telegram Userbot Client]** — Your radio operator in the messenger.
+*   🖥️ **[<a href="https://github.com/Bogdan8266/BodyaSync-Server">BodyaSync-Compose</a>]** — The Brains of the operation (Backend).
+*   🤖 **[Telegram CLIENT TEMPORARILY UNAVAILABLE ]** — Your radio operator in the messenger.
 
 ---
 
