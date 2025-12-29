@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.lazy.layout.LazyLayoutCacheWindow
@@ -54,7 +55,7 @@ import com.dot.gallery.feature_node.presentation.util.selectedMedia
 import dev.chrisbanes.haze.hazeSource
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-
+import com.dot.gallery.core.presentation.components.ExpressiveScreenLoader
 @OptIn(ExperimentalSharedTransitionApi::class, ExperimentalMaterial3Api::class,
     ExperimentalFoundationApi::class
 )
@@ -111,36 +112,50 @@ fun TimelineScreen(
                 )
             }
         ) { it ->
-            PinchZoomGridLayout(
-                state = pinchState,
-                modifier = Modifier.hazeSource(LocalHazeState.current)
-            ) {
-                MediaGridView(
-                    mediaState = mediaState,
-                    metadataState = metadataState,
-                    paddingValues = remember(paddingValues, it) {
-                        PaddingValues(
-                            top = it.calculateTopPadding(),
-                            bottom = paddingValues.calculateBottomPadding() + 128.dp
-                        )
-                    },
-                    searchBarPaddingTop = remember(paddingValues) {
-                        paddingValues.calculateTopPadding()
-                    },
-                    showSearchBar = true,
-                    allowSelection = true,
-                    canScroll = canScroll,
-                    enableStickyHeaders = true,
-                    showMonthlyHeader = true,
-                    isScrolling = isScrolling,
-                    emptyContent = { EmptyMedia() },
-                    sharedTransitionScope = sharedTransitionScope,
-                    animatedContentScope = animatedContentScope,
-                    onMediaClick = {
-                        eventHandler.navigate(Screen.MediaViewScreen.idAndAlbum(it.id, -1L))
-                    },
-                )
+            // --- ФІКС: ПЕРЕВІРКА НА ЗАВАНТАЖЕННЯ ---
+            // Якщо йде завантаження І список ще порожній - показуємо наш індикатор
+            if (mediaState.value.isLoading && mediaState.value.media.isEmpty()) {
+                Box(
+                    modifier = Modifier
+                        .padding(top = it.calculateTopPadding()) // Відступ від пошуку
+                        .fillMaxSize()
+                ) {
+                    ExpressiveScreenLoader()
+                }
+            } else {
+                // Якщо завантажилось (або вже є кеш) - показуємо сітку
+                PinchZoomGridLayout(
+                    state = pinchState,
+                    modifier = Modifier.hazeSource(LocalHazeState.current)
+                ) {
+                    MediaGridView(
+                        mediaState = mediaState,
+                        metadataState = metadataState,
+                        paddingValues = remember(paddingValues, it) {
+                            PaddingValues(
+                                top = it.calculateTopPadding(),
+                                bottom = paddingValues.calculateBottomPadding() + 128.dp
+                            )
+                        },
+                        searchBarPaddingTop = remember(paddingValues) {
+                            paddingValues.calculateTopPadding()
+                        },
+                        showSearchBar = true,
+                        allowSelection = true,
+                        canScroll = canScroll,
+                        enableStickyHeaders = true,
+                        showMonthlyHeader = true,
+                        isScrolling = isScrolling,
+                        emptyContent = { EmptyMedia() },
+                        sharedTransitionScope = sharedTransitionScope,
+                        animatedContentScope = animatedContentScope,
+                        onMediaClick = {
+                            eventHandler.navigate(Screen.MediaViewScreen.idAndAlbum(it.id, -1L))
+                        },
+                    )
+                }
             }
+            // ---------------------------------------
         }
         val selectedMediaList by selectedMedia(
             media = mediaState.value.media,

@@ -170,6 +170,7 @@ dependencies {
     implementation(libs.androidx.lifecycle.process)
     implementation(libs.androidx.material3)
     implementation(libs.androidx.foundation)
+    implementation(libs.androidx.foundation.layout)
     runtimeOnly(libs.androidx.profileinstaller)
     implementation(project(":libs:cropper"))
     "baselineProfile"(project(mapOf("path" to ":baselineprofile")))

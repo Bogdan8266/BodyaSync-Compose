@@ -52,6 +52,7 @@ glide-compose = "1.0.0-beta01"
 glide-ksp = "5.0.4"
 material3Version = "1.4.0"
 foundation = "1.10.0"
+foundationLayout = "1.10.0"
 
 [libraries]
 # AndroidX
@@ -169,6 +170,7 @@ kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serializa
 androidx-lifecycle-process = { group = "androidx.lifecycle", name = "lifecycle-process", version.ref = "lifecycleProcess" }
 androidx-material3 = { group = "androidx.compose.material3", name = "material3", version.ref = "material3Version" }
 androidx-foundation = { group = "androidx.compose.foundation", name = "foundation", version.ref = "foundation" }
+androidx-foundation-layout = { group = "androidx.compose.foundation", name = "foundation-layout", version.ref = "foundationLayout" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }

@@ -71,6 +71,20 @@ import com.dot.gallery.R
 import com.dot.gallery.feature_node.domain.model.PlaybackSpeed
 import com.dot.gallery.feature_node.presentation.util.formatMinSec
 import kotlinx.coroutines.launch
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateIntAsState
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.draw.clip
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.clickable
+import android.view.HapticFeedbackConstants
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.ui.platform.LocalView
+import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -166,13 +180,13 @@ fun VideoPlayerController(
                         )
                     }
                 }
-                IconButton(onClick = { showMenu = !showMenu }) {
-                    Icon(
-                        imageVector = Icons.Outlined.Speed,
-                        tint = Color.White,
-                        contentDescription = stringResource(R.string.change_playback_speed_cd)
-                    )
-                }
+//                IconButton(onClick = { showMenu = !showMenu }) {
+//                    Icon(
+//                        imageVector = Icons.Outlined.Speed,
+//                        tint = Color.White,
+//                        contentDescription = stringResource(R.string.change_playback_speed_cd)
+//                    )
+//                }
             }
 
             IconButton(
@@ -186,21 +200,22 @@ fun VideoPlayerController(
                         isMuted = true
                     }
                 }
-            ) {
-                Icon(
-                    imageVector = if (isMuted) Icons.AutoMirrored.Outlined.VolumeMute else Icons.AutoMirrored.Outlined.VolumeUp,
-                    tint = Color.White,
-                    contentDescription = stringResource(R.string.toggle_audio_cd)
-                )
+            )
+            {
+//                Icon(
+//                    imageVector = if (isMuted) Icons.AutoMirrored.Outlined.VolumeMute else Icons.AutoMirrored.Outlined.VolumeUp,
+//                    tint = Color.White,
+//                    contentDescription = stringResource(R.string.toggle_audio_cd)
+//                )
             }
 
-            IconButton(onClick = { toggleRotate() }) {
-                Icon(
-                    imageVector = Icons.Outlined.ScreenRotation,
-                    tint = Color.White,
-                    contentDescription = stringResource(R.string.rotate_screen_cd)
-                )
-            }
+//            IconButton(onClick = { toggleRotate() }) {
+//                Icon(
+//                    imageVector = Icons.Outlined.ScreenRotation,
+//                    tint = Color.White,
+//                    contentDescription = stringResource(R.string.rotate_screen_cd)
+//                )
+//            }
 
             // --- Timeline Row (Wavy Scrubber) ---
             Row(
@@ -266,36 +281,23 @@ fun VideoPlayerController(
         }
 
         // Center Play/Pause button
-        IconButton(
-            onClick = {
-                val newState = !isPlaying.value
-                isPlaying.value = newState
-                if (newState) {
-                    player.playWhenReady = true
-                    player.play()
-                } else {
-                    player.pause()
-                }
-            },
+        Box(
             modifier = Modifier
                 .align(Alignment.Center)
-                .size(64.dp)
         ) {
-            if (isPlaying.value && player.isPlaying) {
-                Image(
-                    modifier = Modifier.fillMaxSize(),
-                    imageVector = Icons.Filled.PauseCircleFilled,
-                    contentDescription = stringResource(R.string.pause_video),
-                    colorFilter = ColorFilter.tint(Color.White)
-                )
-            } else {
-                Image(
-                    modifier = Modifier.fillMaxSize(),
-                    imageVector = Icons.Filled.PlayCircleFilled,
-                    contentDescription = stringResource(R.string.play_video),
-                    colorFilter = ColorFilter.tint(Color.White)
-                )
-            }
+            ExpressivePlayButton(
+                isPlaying = isPlaying.value && player.isPlaying,
+                onClick = {
+                    val newState = !isPlaying.value
+                    isPlaying.value = newState
+                    if (newState) {
+                        player.playWhenReady = true
+                        player.play()
+                    } else {
+                        player.pause()
+                    }
+                }
+            )
         }
     }
 }
@@ -370,6 +372,93 @@ fun WavyVideoScrubber(
             trackStroke = thickStroke,
             color = MaterialTheme.colorScheme.primary,
             trackColor = Color.White.copy(alpha = 0.3f)
+        )
+    }
+}
+
+@Composable
+fun ExpressivePlayButton(
+    isPlaying: Boolean,
+    onClick: () -> Unit
+) {
+    val view = LocalView.current
+    val scope = rememberCoroutineScope() // Для таймера анімації
+
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+
+    // Додатковий стан для "удару" при швидкому кліку
+    var isAnimatingClick by remember { mutableStateOf(false) }
+
+    // Анімація ширини
+    // Логіка: Якщо тиснеш АБО тільки що клікнув -> розширюємось
+    val width by animateDpAsState(
+        targetValue = if (isPressed || isAnimatingClick) 115.dp else 90.dp,
+        animationSpec = spring(
+            dampingRatio = 0.4f, // Пружний відскок
+            stiffness = Spring.StiffnessMedium
+        ),
+        label = "buttonWidth"
+    )
+
+    // Анімація форми (без змін)
+    val cornerPercent by animateIntAsState(
+        targetValue = if (isPlaying) 50 else 30,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioNoBouncy,
+            stiffness = Spring.StiffnessLow
+        ),
+        label = "buttonShape"
+    )
+
+    // Анімація кольору (без змін)
+    val containerColor by animateColorAsState(
+        targetValue = if (isPlaying)
+            MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.8f)
+        else
+            MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.9f),
+        label = "buttonColor"
+    )
+
+    val contentColor by animateColorAsState(
+        targetValue = if (isPlaying)
+            MaterialTheme.colorScheme.onPrimaryContainer
+        else
+            MaterialTheme.colorScheme.onTertiaryContainer,
+        label = "iconColor"
+    )
+
+    Box(
+        modifier = Modifier
+            .size(width = width, height = 64.dp)
+            .clip(RoundedCornerShape(cornerPercent))
+            .background(containerColor)
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null
+            ) {
+                // 1. Хаптик (CONFIRM, як ти хотів)
+                view.performHapticFeedback(HapticFeedbackConstants.CONFIRM)
+
+                // 2. Виконуємо дію
+                onClick()
+
+                // 3. Запускаємо візуальний "поштовх"
+                scope.launch {
+                    isAnimatingClick = true
+                    // Чекаємо 100мс, щоб пружина встигла візуально розширити кнопку
+                    delay(100)
+                    view.performHapticFeedback(HapticFeedbackConstants.CONFIRM)
+                    isAnimatingClick = false
+                }
+            },
+        contentAlignment = Alignment.Center
+    ) {
+        Icon(
+            imageVector = if (isPlaying) Icons.Filled.PauseCircleFilled else Icons.Filled.PlayCircleFilled,
+            contentDescription = null,
+            tint = contentColor,
+            modifier = Modifier.size(32.dp)
         )
     }
 }
