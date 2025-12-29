@@ -146,7 +146,7 @@ Seeing once is better than hearing stories at a bar a hundred times.
 
 This is just one piece of the puzzle. Grab the full kit:
 
-*   🖥️ **[Server Side Repository]** — The Brains of the operation (Backend).
+*   🖥️ **[<a href="https://github.com/Bogdan8266/BodyaSync-Compose">BodyaSync-Compose</a>]** — The Brains of the operation (Backend).
 *   🤖 **[Telegram Userbot Client]** — Your radio operator in the messenger.
 
 ---
