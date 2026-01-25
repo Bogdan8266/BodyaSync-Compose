@@ -99,7 +99,7 @@ Hold onto your seat for this one.
 
 > 💡 **The Kicker:** Videos are compressed on the fly and fly out via the server's stable wired connection. You save your mobile data and time.
 
-🔗 **[LINK TO TELEGRAM CLIENT TEMPORARILY UNAVAILABLE]**
+🔗 *   🤖 **[<a href="https://github.com/Bogdan8266/BodyaGram">BodyaGram-Client</a>]** — Your radio operator in the messenger.
 
 ---
 
