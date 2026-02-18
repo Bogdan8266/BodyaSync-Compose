@@ -18,7 +18,7 @@
     <!-- Required to download Map Preview for Media -->
     <uses-permission android:name="android.permission.INTERNET"/>
 
-
+    <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE" />
     <!-- Remove unwanted permissions from being added -->
     <uses-permission android:name="android.permission.INTERNET" tools:node="remove"/>
     <uses-permission android:name="android.permission.READ_PHONE_STATE" tools:node="remove"/>

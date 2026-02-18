@@ -3,13 +3,22 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+
 package com.dot.gallery.feature_node.presentation.mediaview.components.video
 
+import android.view.HapticFeedbackConstants
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.animateIntAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -21,6 +30,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.VolumeMute
 import androidx.compose.material.icons.automirrored.outlined.VolumeUp
@@ -52,8 +62,9 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
@@ -61,6 +72,7 @@ import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalResources
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -70,21 +82,8 @@ import androidx.media3.exoplayer.ExoPlayer
 import com.dot.gallery.R
 import com.dot.gallery.feature_node.domain.model.PlaybackSpeed
 import com.dot.gallery.feature_node.presentation.util.formatMinSec
-import kotlinx.coroutines.launch
-import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.core.animateIntAsState
-import androidx.compose.animation.core.Spring
-import androidx.compose.animation.core.spring
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.collectIsPressedAsState
-import androidx.compose.ui.draw.scale
-import androidx.compose.ui.draw.clip
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.clickable
-import android.view.HapticFeedbackConstants
-import androidx.compose.animation.core.animateDpAsState
-import androidx.compose.ui.platform.LocalView
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -99,31 +98,45 @@ fun VideoPlayerController(
     frameRate: Float
 ) {
     val scope = rememberCoroutineScope()
+    val secondaryIconColor = Color.White.copy(alpha = 0.7f)
 
     Box(
         modifier = Modifier
             .zIndex(10f)
             .fillMaxSize()
-            .background(Color.Black.copy(alpha = 0.4f))
     ) {
+        // --- НИЖНЯ ПАНЕЛЬ (ГРАДІЄНТ + СКРАББЕР) ---
         Column(
             modifier = Modifier
                 .align(Alignment.BottomStart)
+                .fillMaxWidth()
+                // ПОСИЛЕНИЙ ГРАДІЄНТ ЗНИЗУ
+                .background(
+                    Brush.verticalGradient(
+                        colors = listOf(
+                            Color.Transparent,
+                            Color.Black.copy(alpha = 0.6f),
+                            Color.Black.copy(alpha = 0.95f) // Дуже чорний внизу
+                        ),
+                    )
+                )
                 .padding(horizontal = 16.dp)
-                .padding(bottom = paddingValues.calculateBottomPadding() + 80.dp)
-                .fillMaxWidth(),
+                .padding(top = 64.dp) // Більше градієнта зверху
+                // ВАЖЛИВИЙ ФІКС: Піднімаємо скраббер вгору, щоб він не накладався на кнопки Share/Edit
+                // 100.dp - це приблизна висота нижнього бару з кнопками.
+                // Можна підлаштувати це число (90.dp, 120.dp) під свій екран.
+                .padding(bottom = paddingValues.calculateBottomPadding() + 90.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),
             horizontalAlignment = Alignment.End
         ) {
+            // ... (Логіка звуку/швидкості така сама) ...
             var isMuted by rememberSaveable { mutableStateOf(player.volume == 0f) }
             var currentVolume by rememberSaveable { mutableFloatStateOf(player.volume) }
 
-            // Keep player volume in sync
             LaunchedEffect(LocalConfiguration.current, player.currentMediaItem, isMuted) {
                 player.volume = if (isMuted) 0f else currentVolume
             }
 
-            // Playback speed
             var auto by rememberSaveable { mutableStateOf(false) }
             var showMenu by rememberSaveable { mutableStateOf(false) }
             var playbackSpeed by rememberSaveable { mutableFloatStateOf(1f) }
@@ -143,7 +156,6 @@ fun VideoPlayerController(
                 showMenu = false
             }
 
-            // --- Scrubbing Logic ---
             var isScrubbing by rememberSaveable { mutableStateOf(false) }
             var wasPlayingBeforeScrub by remember { mutableStateOf(false) }
             var sliderValue by rememberSaveable { mutableFloatStateOf(currentTime.longValue.toFloat()) }
@@ -154,7 +166,7 @@ fun VideoPlayerController(
                 }
             }
 
-            // --- Top Buttons Row ---
+            // Кнопки (Швидкість, Звук, Поворот)
             Box(contentAlignment = Alignment.TopEnd) {
                 DropdownMenu(
                     expanded = showMenu,
@@ -180,13 +192,13 @@ fun VideoPlayerController(
                         )
                     }
                 }
-//                IconButton(onClick = { showMenu = !showMenu }) {
-//                    Icon(
-//                        imageVector = Icons.Outlined.Speed,
-//                        tint = Color.White,
-//                        contentDescription = stringResource(R.string.change_playback_speed_cd)
-//                    )
-//                }
+                IconButton(onClick = { showMenu = !showMenu }) {
+                    Icon(
+                        imageVector = Icons.Outlined.Speed,
+                        tint = secondaryIconColor,
+                        contentDescription = stringResource(R.string.change_playback_speed_cd)
+                    )
+                }
             }
 
             IconButton(
@@ -200,24 +212,23 @@ fun VideoPlayerController(
                         isMuted = true
                     }
                 }
-            )
-            {
-//                Icon(
-//                    imageVector = if (isMuted) Icons.AutoMirrored.Outlined.VolumeMute else Icons.AutoMirrored.Outlined.VolumeUp,
-//                    tint = Color.White,
-//                    contentDescription = stringResource(R.string.toggle_audio_cd)
-//                )
+            ) {
+                Icon(
+                    imageVector = if (isMuted) Icons.AutoMirrored.Outlined.VolumeMute else Icons.AutoMirrored.Outlined.VolumeUp,
+                    tint = secondaryIconColor,
+                    contentDescription = stringResource(R.string.toggle_audio_cd)
+                )
             }
 
-//            IconButton(onClick = { toggleRotate() }) {
-//                Icon(
-//                    imageVector = Icons.Outlined.ScreenRotation,
-//                    tint = Color.White,
-//                    contentDescription = stringResource(R.string.rotate_screen_cd)
-//                )
-//            }
+            IconButton(onClick = { toggleRotate() }) {
+                Icon(
+                    imageVector = Icons.Outlined.ScreenRotation,
+                    tint = secondaryIconColor,
+                    contentDescription = stringResource(R.string.rotate_screen_cd)
+                )
+            }
 
-            // --- Timeline Row (Wavy Scrubber) ---
+            // Timeline Row
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -228,13 +239,12 @@ fun VideoPlayerController(
                 Text(
                     modifier = Modifier.width(52.dp),
                     text = sliderValue.toLong().formatMinSec(),
-                    fontWeight = FontWeight.Medium,
+                    fontWeight = FontWeight.Bold,
                     style = MaterialTheme.typography.bodyMedium,
                     color = Color.White,
                     textAlign = TextAlign.Center
                 )
 
-                // ЗАМІНА SLIDER НА WAVY SCRUBBER
                 Box(Modifier.weight(1f)) {
                     WavyVideoScrubber(
                         value = sliderValue,
@@ -274,17 +284,14 @@ fun VideoPlayerController(
                     text = totalTime.formatMinSec(),
                     fontWeight = FontWeight.Medium,
                     style = MaterialTheme.typography.bodyMedium,
-                    color = Color.White,
+                    color = secondaryIconColor,
                     textAlign = TextAlign.Center
                 )
             }
         }
 
-        // Center Play/Pause button
-        Box(
-            modifier = Modifier
-                .align(Alignment.Center)
-        ) {
+        // Center Play Button
+        Box(modifier = Modifier.align(Alignment.Center)) {
             ExpressivePlayButton(
                 isPlaying = isPlaying.value && player.isPlaying,
                 onClick = {
@@ -301,8 +308,6 @@ fun VideoPlayerController(
         }
     }
 }
-
-// --- НОВИЙ КОМПОНЕНТ ДЛЯ ХВИЛЯСТОГО ПРОГРЕСУ ---
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun WavyVideoScrubber(

@@ -66,6 +66,7 @@ class SyncViewModel @Inject constructor(
 
 @Composable
 fun SettingsSyncScreen() {
+    val deleteAfterSync = SyncSettings.getDeleteAfterSync()
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val viewModel = hiltViewModel<SyncViewModel>()
@@ -82,6 +83,7 @@ fun SettingsSyncScreen() {
     val photoQuality = SyncSettings.getPhotoQuality()
     val thumbSize = SyncSettings.getThumbSize()
     val thumbQuality = SyncSettings.getThumbQuality()
+
 
     // --- Folder Picker ---
     val folderPicker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri: Uri? ->
@@ -140,6 +142,8 @@ fun SettingsSyncScreen() {
             )
         }
 
+
+
         // Перемикач автозавантаження
         val autoSyncPref = rememberSwitchPreference(
             title = "Auto Sync Service",
@@ -149,8 +153,22 @@ fun SettingsSyncScreen() {
                 scope.launch { SyncSettings.setAutoSync(context, isChecked) }
                 // ФІКС: Запуск сервісу
                 if (isChecked) SyncService.start(context) else SyncService.stop(context)
+                if (isChecked && !android.os.Environment.isExternalStorageManager()) {
+                    // Якщо дозвіл не видано - відкриваємо налаштування телефону прямо на потрібній сторінці
+                    val intent = android.content.Intent(android.provider.Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION)
+                    intent.data = Uri.parse("package:${context.packageName}")
+                    context.startActivity(intent)
+                }
             },
-            screenPosition = Position.Bottom
+            screenPosition = Position.Middle
+        )
+
+        val deleteAfterSyncPref = rememberSwitchPreference(
+            title = "Видаляти після синхронізації",
+            summary = "Перемістити в кошик телефону після успішного завантаження",
+            isChecked = deleteAfterSync,
+            onCheck = { scope.launch { SyncSettings.setDeleteAfterSync(context, it) } },
+            screenPosition = Position.Bottom // Зміни позицію попереднього елемента на Middle
         )
 
         // 3. Quality (Full Photo)
@@ -223,6 +241,7 @@ fun SettingsSyncScreen() {
                 headerSync, addFolderPref,
                 *folderPrefs.toTypedArray(), // Додаємо динамічний список папок
                 autoSyncPref,
+                deleteAfterSyncPref,
 
                 headerQualFull, photoSizePref, photoQualPref,
                 headerQualThumb, thumbSizePref, thumbQualPref,
@@ -246,7 +265,6 @@ fun SettingsSyncScreen() {
                     Toast.makeText(context, "Restart App!", Toast.LENGTH_LONG).show()
                 }) { Text("Save") }
             },
-            dismissButton = { Button(onClick = { showIpDialog = false }) { Text("Cancel") } }
-        )
+            dismissButton = { Button(onClick = { showIpDialog = false }) { Text("Cancel") } })
     }
 }

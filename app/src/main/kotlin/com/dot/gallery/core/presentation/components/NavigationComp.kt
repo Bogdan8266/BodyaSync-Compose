@@ -78,6 +78,7 @@ import com.dot.gallery.feature_node.presentation.vault.VaultScreen
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
 
+
 @OptIn(ExperimentalSharedTransitionApi::class, ExperimentalPermissionsApi::class)
 @Stable
 @NonRestartableComposable

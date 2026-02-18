@@ -19,6 +19,8 @@ import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.lazy.layout.LazyLayoutCacheWindow
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
@@ -30,8 +32,11 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.dokar.pinchzoomgrid.PinchZoomGridLayout
 import com.dokar.pinchzoomgrid.rememberPinchZoomGridState
@@ -41,6 +46,8 @@ import com.dot.gallery.core.LocalMediaSelector
 import com.dot.gallery.core.Settings.Misc.rememberGridSize
 import com.dot.gallery.core.navigate
 import com.dot.gallery.core.presentation.components.EmptyMedia
+import com.dot.gallery.core.presentation.components.ExpressivePullToRefreshIndicator
+import com.dot.gallery.core.presentation.components.ExpressiveScreenLoader
 import com.dot.gallery.core.presentation.components.SelectionSheet
 import com.dot.gallery.core.toggleNavigationBar
 import com.dot.gallery.feature_node.domain.model.Media
@@ -55,7 +62,7 @@ import com.dot.gallery.feature_node.presentation.util.selectedMedia
 import dev.chrisbanes.haze.hazeSource
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import com.dot.gallery.core.presentation.components.ExpressiveScreenLoader
+
 @OptIn(ExperimentalSharedTransitionApi::class, ExperimentalMaterial3Api::class,
     ExperimentalFoundationApi::class
 )
@@ -67,13 +74,17 @@ fun TimelineScreen(
     metadataState: State<MediaMetadataState>,
     sharedTransitionScope: SharedTransitionScope,
     animatedContentScope: AnimatedContentScope,
+    viewModel: TimelineViewModel = hiltViewModel()
 ) {
+    val isRefreshing by viewModel.isRefreshing.collectAsStateWithLifecycle()
+
     var canScroll by rememberSaveable { mutableStateOf(true) }
     var lastCellIndex by rememberGridSize()
     val eventHandler = LocalEventHandler.current
     val selector = LocalMediaSelector.current
     val selectionState = selector.isSelectionActive.collectAsStateWithLifecycle()
-    val selectedMedia = selector.selectedMedia.collectAsStateWithLifecycle()
+    // ФІКС: Збираємо selectedMedia як State, бо функція selectedMedia очікує State
+    val selectedMediaState = selector.selectedMedia.collectAsStateWithLifecycle()
 
     val dpCacheWindow = LazyLayoutCacheWindow(aheadFraction = 2f, behindFraction = 2f)
     val pinchState = rememberPinchZoomGridState(
@@ -83,6 +94,8 @@ fun TimelineScreen(
             cacheWindow = dpCacheWindow
         )
     )
+    // Pull to Refresh State
+    val pullState = rememberPullToRefreshState()
 
     LaunchedEffect(pinchState.isZooming) {
         withContext(Dispatchers.IO) {
@@ -96,11 +109,10 @@ fun TimelineScreen(
     }
 
     Box(
-        modifier = Modifier
-            .padding(
-                start = paddingValues.calculateStartPadding(LocalLayoutDirection.current),
-                end = paddingValues.calculateEndPadding(LocalLayoutDirection.current)
-            )
+        modifier = Modifier.padding(
+            start = paddingValues.calculateStartPadding(LocalLayoutDirection.current),
+            end = paddingValues.calculateEndPadding(LocalLayoutDirection.current)
+        )
     ) {
         Scaffold(
             topBar = {
@@ -112,58 +124,82 @@ fun TimelineScreen(
                 )
             }
         ) { it ->
-            // --- ФІКС: ПЕРЕВІРКА НА ЗАВАНТАЖЕННЯ ---
-            // Якщо йде завантаження І список ще порожній - показуємо наш індикатор
             if (mediaState.value.isLoading && mediaState.value.media.isEmpty()) {
                 Box(
                     modifier = Modifier
-                        .padding(top = it.calculateTopPadding()) // Відступ від пошуку
+                        .padding(top = it.calculateTopPadding())
                         .fillMaxSize()
                 ) {
                     ExpressiveScreenLoader()
                 }
             } else {
-                // Якщо завантажилось (або вже є кеш) - показуємо сітку
-                PinchZoomGridLayout(
-                    state = pinchState,
-                    modifier = Modifier.hazeSource(LocalHazeState.current)
+                PullToRefreshBox(
+                    isRefreshing = isRefreshing,
+                    onRefresh = { viewModel.refreshMedia() },
+                    state = pullState,
+                    modifier = Modifier.fillMaxSize(),
+                    indicator = {
+                        ExpressivePullToRefreshIndicator(
+                            state = pullState,
+                            isRefreshing = isRefreshing,
+                            modifier = Modifier
+                                .align(Alignment.TopCenter)
+                                .padding(top = it.calculateTopPadding())
+                        )
+                    }
                 ) {
-                    MediaGridView(
-                        mediaState = mediaState,
-                        metadataState = metadataState,
-                        paddingValues = remember(paddingValues, it) {
-                            PaddingValues(
-                                top = it.calculateTopPadding(),
-                                bottom = paddingValues.calculateBottomPadding() + 128.dp
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .graphicsLayer {
+                                translationY = pullState.distanceFraction * 150f
+                            }
+                    ) {
+                        PinchZoomGridLayout(
+                            state = pinchState,
+                            modifier = Modifier.hazeSource(LocalHazeState.current)
+                        ) {
+                            MediaGridView(
+                                mediaState = mediaState,
+                                metadataState = metadataState,
+                                paddingValues = remember(paddingValues, it) {
+                                    PaddingValues(
+                                        top = it.calculateTopPadding(),
+                                        bottom = paddingValues.calculateBottomPadding() + 128.dp
+                                    )
+                                },
+                                searchBarPaddingTop = remember(paddingValues) {
+                                    paddingValues.calculateTopPadding()
+                                },
+                                showSearchBar = true,
+                                allowSelection = true,
+                                canScroll = canScroll,
+                                enableStickyHeaders = true,
+                                showMonthlyHeader = true,
+                                isScrolling = isScrolling,
+                                emptyContent = { EmptyMedia() },
+                                sharedTransitionScope = sharedTransitionScope,
+                                animatedContentScope = animatedContentScope,
+                                onMediaClick = { media ->
+                                    eventHandler.navigate(Screen.MediaViewScreen.idAndAlbum(media.id, -1L))
+                                },
                             )
-                        },
-                        searchBarPaddingTop = remember(paddingValues) {
-                            paddingValues.calculateTopPadding()
-                        },
-                        showSearchBar = true,
-                        allowSelection = true,
-                        canScroll = canScroll,
-                        enableStickyHeaders = true,
-                        showMonthlyHeader = true,
-                        isScrolling = isScrolling,
-                        emptyContent = { EmptyMedia() },
-                        sharedTransitionScope = sharedTransitionScope,
-                        animatedContentScope = animatedContentScope,
-                        onMediaClick = {
-                            eventHandler.navigate(Screen.MediaViewScreen.idAndAlbum(it.id, -1L))
-                        },
-                    )
+                        }
+                    }
                 }
             }
-            // ---------------------------------------
         }
+
+        // ФІКС: Передаємо правильні параметри в selectedMedia
         val selectedMediaList by selectedMedia(
             media = mediaState.value.media,
-            selectedSet = selectedMedia
+            selectedSet = selectedMediaState
         )
+
         SelectionSheet(
             modifier = Modifier.align(Alignment.BottomEnd),
-            allMedia = mediaState.value,
+            // ФІКС: Перетворюємо список на MediaState, бо SelectionSheet цього очікує
+            allMedia = MediaState(media = mediaState.value.media),
             selectedMedia = selectedMediaList
         )
     }

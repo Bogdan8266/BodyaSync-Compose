@@ -19,6 +19,7 @@ object SyncSettings {
     private val SERVER_URL = stringPreferencesKey("server_url")
     private val SYNC_FOLDER_URI = stringPreferencesKey("sync_folder_uri")
     private val AUTO_SYNC = booleanPreferencesKey("auto_sync")
+    private val DELETE_AFTER_SYNC = booleanPreferencesKey("delete_after_sync")
 
     private val PHOTO_SIZE = floatPreferencesKey("server_photo_size")
     private val PHOTO_QUALITY = floatPreferencesKey("server_photo_quality")
@@ -56,6 +57,11 @@ object SyncSettings {
     @Composable
     fun getAutoSync(): Boolean =
         LocalContext.current.getSettingFlow(AUTO_SYNC, false)
+            .collectAsState(initial = false).value
+
+    @Composable
+    fun getDeleteAfterSync(): Boolean =
+        LocalContext.current.getSettingFlow(DELETE_AFTER_SYNC, false)
             .collectAsState(initial = false).value
 
     @Composable
@@ -105,6 +111,9 @@ object SyncSettings {
 
     suspend fun setAutoSync(context: Context, value: Boolean) =
         context.setSettingValue(AUTO_SYNC, value)
+
+    suspend fun setDeleteAfterSync(context: Context, value: Boolean) =
+        context.setSettingValue(DELETE_AFTER_SYNC, value)
 
     suspend fun setPhotoSize(context: Context, value: Float) =
         context.setSettingValue(PHOTO_SIZE, value)

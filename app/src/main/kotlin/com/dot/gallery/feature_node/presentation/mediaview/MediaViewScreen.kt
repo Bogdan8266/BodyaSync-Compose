@@ -551,7 +551,7 @@ fun <T : Media> MediaViewScreen(
                                     )
 
                                     AnimatedVisibility(
-                                        visible = showUI,
+                                        visible = showUI, // Просто showUI, без .value
                                         enter = enterAnimation(DEFAULT_TOP_BAR_ANIMATION_DURATION),
                                         exit = exitAnimation(DEFAULT_TOP_BAR_ANIMATION_DURATION),
                                         modifier = Modifier.fillMaxSize()
@@ -567,6 +567,7 @@ fun <T : Media> MediaViewScreen(
                                             frameRate = frameRate
                                         )
                                     }
+
                                 }
                             }
                         }
@@ -584,7 +585,7 @@ fun <T : Media> MediaViewScreen(
                 currentDate = currentDate,
                 paddingValues = paddingValues,
                 currentMedia = currentMedia,
-                showRotationHelper = showRotationHelper,
+                //showRotationHelper = showRotationHelper,
                 rotateImage = {
                     viewModel.rotateImage(currentMedia!!, newRotationValue.intValue)
                 },

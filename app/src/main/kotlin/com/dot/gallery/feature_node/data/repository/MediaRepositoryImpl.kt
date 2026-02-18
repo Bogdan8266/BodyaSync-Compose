@@ -88,7 +88,10 @@ import kotlinx.coroutines.flow.flow // Додай flow builder
 import androidx.datastore.preferences.core.stringPreferencesKey
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
-
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.transformLatest
+import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.channels.BufferOverflow
 
 
 class MediaRepositoryImpl(
@@ -101,15 +104,21 @@ class MediaRepositoryImpl(
 ) : MediaRepository {
 
     private val contentResolver = context.contentResolver
+    private val refreshSignal = MutableSharedFlow<Unit>(
+        replay = 1,
+        onBufferOverflow = BufferOverflow.DROP_OLDEST
+    )
+    private var cachedMedia: List<UriMedia> = emptyList()
 
     private var updateDatabaseMutex = Mutex()
     override suspend fun updateInternalDatabase() {
-        if (!updateDatabaseMutex.isLocked) {
-            updateDatabaseMutex.withLock {
-                delay(5000) // Delay to ensure the database is not updated too frequently
+        //if (!updateDatabaseMutex.isLocked) {
+           // updateDatabaseMutex.withLock {
+                //delay(5000) // Delay to ensure the database is not updated too frequently
                 workManager.updateDatabase()
-            }
-        }
+                refreshSignal.emit(Unit)
+           // }
+        //}
         //workManager.scheduleMediaMigrationCheck()
     }
 
@@ -120,7 +129,12 @@ class MediaRepositoryImpl(
      * ОНОВЛЕНИЙ МЕТОД GET MEDIA (Версія 2.0 - Фікс багів)
      */
     @OptIn(ExperimentalCoroutinesApi::class)
-    override fun getMedia(): Flow<Resource<List<UriMedia>>> = flow {
+    override fun getMedia(): Flow<Resource<List<UriMedia>>> = refreshSignal
+        .onStart { emit(Unit) }
+        .transformLatest {
+            if (cachedMedia.isNotEmpty()) {
+                emit(Resource.Success(cachedMedia))
+            }
         try {
             // 1. Дістаємо збережений IP з налаштувань (асинхронно, один раз на початку)
             var baseUrl = context.dataStore.data.map { preferences ->
@@ -166,6 +180,7 @@ class MediaRepositoryImpl(
             }
 
             val sortedList = MediaOrder.Date(OrderType.Descending).sortMedia(uriMediaList)
+            cachedMedia = sortedList
             emit(Resource.Success(sortedList))
 
         } catch (e: Exception) {
