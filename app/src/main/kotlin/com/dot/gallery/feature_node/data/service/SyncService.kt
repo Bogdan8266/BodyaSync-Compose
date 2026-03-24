@@ -215,16 +215,26 @@ class SyncService : Service() {
 
     private fun createNotification(text: String, progress: Int, indeterminate: Boolean): Notification {
         val channelId = "sync_channel"
+
+        // Побудова сповіщення
         val builder = NotificationCompat.Builder(this, channelId)
             .setContentTitle("BodyaSync")
             .setContentText(text)
             .setSmallIcon(R.drawable.ic_launcher_foreground)
-            .setOngoing(true)
-            .setOnlyAlertOnce(true)
+
+            // --- МАГІЯ ТУТ ---
+            .setOngoing(true) // Це забороняє користувачу змахувати сповіщення
+            .setAutoCancel(false) // Сповіщення не зникне навіть при кліку на нього
+            // -----------------
+
+            .setPriority(NotificationCompat.PRIORITY_LOW) // Щоб не пищало кожну секунду
+            .setCategory(NotificationCompat.CATEGORY_SERVICE)
+            .setOnlyAlertOnce(true) // Щоб не вібрувало при кожному оновленні відсотків
 
         if (indeterminate || progress > 0) {
             builder.setProgress(100, progress, indeterminate)
         }
+
         return builder.build()
     }
 
