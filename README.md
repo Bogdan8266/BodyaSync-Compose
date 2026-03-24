@@ -99,7 +99,7 @@ Hold onto your seat for this one.
 
 > 💡 **The Kicker:** Videos are compressed on the fly and fly out via the server's stable wired connection. You save your mobile data and time.
 
-🔗 **[LINK TO TELEGRAM CLIENT TEMPORARILY UNAVAILABLE]**
+🔗 *   🤖 **[<a href="https://github.com/Bogdan8266/BodyaGram">BodyaGram-Client</a>]** — Your radio operator in the messenger.
 
 ---
 
@@ -147,7 +147,7 @@ Seeing once is better than hearing stories at a bar a hundred times.
 This is just one piece of the puzzle. Grab the full kit:
 
 *   🖥️ **[<a href="https://github.com/Bogdan8266/BodyaSync-Server">BodyaSync-Server</a>]** — The Brains of the operation (Backend).
-*   🤖 **[Telegram CLIENT TEMPORARILY UNAVAILABLE ]** — Your radio operator in the messenger.
+*   🤖 **[<a href="https://github.com/Bogdan8266/BodyaGram">BodyaGram-Client</a>]** — Your radio operator in the messenger.
 
 ---
 
