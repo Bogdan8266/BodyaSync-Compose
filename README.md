@@ -159,4 +159,7 @@ This is just one piece of the puzzle. Grab the full kit:
 
 Made with ❤️ and ☕ by **[Bodya]**
 android kotlin jetpack-compose material-design-3 gallery-app self-hosted server-client nextcloud-alternative image-processing performance photo-gallery telegram-integration clean-architecture opensource
+<p align="right">
+  <img src="https://komarev.com/ghpvc/?username=Bogdan8266&page=BodyaSync-Compose&color=blue&label=Repo%20views" alt="Views">
+</p>
 </div>
